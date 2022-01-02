@@ -1,0 +1,15 @@
+HASHING::
+SALT::
+36 :: ////£ßËa///////GENESISBLOCKNULLNULL
+HASH::
+64 :: ;uê7–z?~	î?Æ™g,þÞJ}iý~xlÂ#¡g>{ª5#³g–]ÊÉ‹ÎÍNxèDXì+®;©“È
+
+
+HASHING::
+SALT::
+97 :: ///£ßËa///////message 1;uê7–z?~	î?Æ™g,þÞJ}iý~xlÂ#¡g>{ª5#³g–]ÊÉ‹ÎÍNxèDXì+®;©“È;uê7–z?~
+HASH::
+97 :: Z!˜ÓÀKNŒ7¡R¯™4#	`m/áù˜oƒfGõ›ä¿ ¦€’·tüJ©~Pš°œñOÝ<ßB¨D•
+FN¥2³g–]ÊÉ‹ÎÍNxèDXì+®;©“È;uê7–z?~
+
+

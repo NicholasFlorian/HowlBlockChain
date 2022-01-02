@@ -1,0 +1,210 @@
+#include "block.h"
+
+int MAX_MESSAGE = 256;
+
+namespace howl {
+
+    Block::Block(
+        uint32_t index, 
+        Block* previousBlock, 
+        char* previousHash, 
+        char* message): 
+
+        _version(index),
+        _previousBlock(previousBlock),
+        _previousHash(previousHash),
+        _message(message){
+        
+        _nonce = 0;
+        _time = time(nullptr); // set the current time
+    }
+
+    // return the blocks hash 
+    char* Block::getHash() {
+
+        return _currentHash;
+    }
+
+    char* Block::toString(){
+
+        // variables 
+        char* buffer;
+
+        // assign memory
+        buffer = (char*) malloc(sizeof(char) * 10000);
+
+        sprintf(
+            buffer, 
+            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"merkleRootHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            _version,
+            _nonce,
+            _previousHash,
+            _merkleRootHash,
+            _message,
+            _time);
+
+        return buffer;
+    }
+
+    void Block::mine(uint32_t work) {
+    
+        // variable
+        bool proofOfWork;
+
+        // calculate the merkleroot hash
+        _merkleRootHash = _calculateMerkleRootHash(); 
+
+        //_merkleRootHash = (char*) "ORIGIN";
+
+        // calculate the hash
+        proofOfWork = false;
+        while(!proofOfWork){
+
+            _nonce++;
+            _currentHash = _calculateHash();
+
+            //proofOfWork = true;
+            //for(int i = 0; i < work; i++)
+            //    if(_currentHash[i] != '0')
+            //        proofOfWork = false;
+            proofOfWork = true;
+        }      
+    }
+
+    char* Block::_calculateHash(){
+
+        // variables
+        OpenSSL::SHA512_CTX* ctx;
+        char* hash;
+        int i;
+        int messageLength;
+        int previousHashLength;
+        int merkleRootHashLength;
+        
+        // assign memory
+        ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+        hash = (char *) malloc(sizeof(char) * (1024));
+
+        std::cout << "HASHING::" << std::endl;
+
+        // season the hash
+        i = 0;
+        for (int j = 0; j < 4; j++)
+            hash[i++] = (_version >> (8*j)) & 0xff;
+
+        for (int j = 0; j < 4; j++)
+            hash[i++] = (_time >> (8*j)) & 0xff;
+
+        for (int j = 0; j < 4; j++)
+            hash[i++] = (_nonce >> (8*j)) & 0xff;
+
+        messageLength = strlen(_message);
+        for (int j = 0; j < messageLength; j++)
+            hash[i++] = _message[j];
+
+        previousHashLength = strlen(_previousHash);
+        for (int j = 0; j < previousHashLength; j++)
+            hash[i++] = _previousHash[j];
+
+        merkleRootHashLength = strlen(_merkleRootHash);
+        for (int j = 0; j < merkleRootHashLength; j++)
+            hash[i++] = _merkleRootHash[j];
+
+        for (int j = 0; j < i; j++)
+            if(hash[j] == '\0')
+                hash[j] = '/';
+
+        hash[i] = '\0';
+        
+        std::cout << "SALT::" << std::endl;
+        std::cout << strlen(hash) << " :: " << hash << std::endl;
+
+        // hash
+        OpenSSL::SHA512_Init(ctx);
+        OpenSSL::SHA512_Update(ctx, hash, i-1);
+        OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
+                
+        std::cout << "HASH::" << std::endl;
+        std::cout << strlen(hash) << " :: " << hash << std::endl << std::endl << std::endl;
+
+        // free
+        free(ctx);
+
+        return hash;
+    }
+
+    char* Block::_calculateMerkleRootHash(){
+        
+        // variables 
+        OpenSSL::SHA512_CTX* ctx;
+        Block*  iterator;
+        char*   hash;
+        int     i;
+
+        // assign memory
+        ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+        hash = (char*) malloc(sizeof(char) * 8192);
+
+        std::cout << "MERKLEROOT::" << std::endl;
+
+        // iterate
+        iterator = this;
+        i = 0;
+        while(true){
+    
+            // variables
+            bool    flag;
+            int     previousHashLength;
+
+            flag = true;
+
+            // concat each previous hash until the genisis Block is reached
+            previousHashLength = strlen(_previousHash);
+            for(int j = 0; j < previousHashLength; j++){
+                
+                hash[i++] = iterator->_previousHash[j];
+                if(i == 8190){
+
+                    flag = false;
+                    break;
+                }
+            }
+
+            if(iterator->_version == 0)
+                break;
+
+            if(!flag)
+                break;
+
+            //hash[i++] = '_';
+
+            // iterate to the next block
+            iterator = iterator->_previousBlock;
+        } 
+
+        for (int j = 0; j < i; j++)
+            hash[i] = hash[i] | 0x3f;
+
+        hash[i] = '\0';
+
+        for(int j = 0; j < i - 2; j++)
+            if(hash[j] == '\0' || hash[j] == '\n' || hash[j] == '\t' || hash[j] == '\"')
+                hash[j] = '/';
+        
+        std::cout << "SALT::" << std::endl;
+        std::cout << strlen(hash) << " :: " << hash << std::endl;
+
+        // hash
+        OpenSSL::SHA512_Init(ctx);
+        OpenSSL::SHA512_Update(ctx, hash, i);
+        OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
+
+        std::cout << "HASH::" << std::endl;
+        std::cout << strlen(hash) << " :: " << (unsigned char*)hash << std::endl;
+
+        // free
+        free(ctx);
+
+        return hash;
+    }
+}
