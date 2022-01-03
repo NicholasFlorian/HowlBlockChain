@@ -168,12 +168,16 @@ int main(int argc, char *argv[]) {
     
     blockChain = (howl::BlockChain*) malloc(sizeof(blockChain));
     blockChain = new howl::BlockChain();
-    blockChain->addblock((char *) "message 1");
-
     std::cout << blockChain->toString() << std::endl;
 
+    blockChain->addblock((char *) "message 1");
+    std::cout << blockChain->toString() << std::endl;
+    
+    blockChain->addblock((char *) "message 2");
+    std::cout << blockChain->toString() << std::endl;
 
-    //free(hash);
+    blockChain->addblock((char *) "message 3");
+    std::cout << blockChain->toString() << std::endl;
 
     return 1;
 }

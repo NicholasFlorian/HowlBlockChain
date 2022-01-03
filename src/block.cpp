@@ -54,8 +54,6 @@ namespace howl {
         // calculate the merkleroot hash
         _merkleRootHash = _calculateMerkleRootHash(); 
 
-        //_merkleRootHash = (char*) "ORIGIN";
-
         // calculate the hash
         proofOfWork = false;
         while(!proofOfWork){
@@ -63,11 +61,10 @@ namespace howl {
             _nonce++;
             _currentHash = _calculateHash();
 
-            //proofOfWork = true;
-            //for(int i = 0; i < work; i++)
-            //    if(_currentHash[i] != '0')
-            //        proofOfWork = false;
             proofOfWork = true;
+            for(uint32_t i = 0; i < work; i++)
+                if(_currentHash[i] != '0')
+                    proofOfWork = false;
         }      
     }
 
@@ -75,6 +72,7 @@ namespace howl {
 
         // variables
         OpenSSL::SHA512_CTX* ctx;
+        char* salt;
         char* hash;
         int i;
         int messageLength;
@@ -83,49 +81,52 @@ namespace howl {
         
         // assign memory
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+        salt = (char *) malloc(sizeof(char) * (1024));
         hash = (char *) malloc(sizeof(char) * (1024));
 
-        std::cout << "HASHING::" << std::endl;
+        //std::cout << "HASHING::" << std::endl;
 
         // season the hash
         i = 0;
         for (int j = 0; j < 4; j++)
-            hash[i++] = (_version >> (8*j)) & 0xff;
+            salt[i++] = (_version >> (8*j)) & 0xff;
 
         for (int j = 0; j < 4; j++)
-            hash[i++] = (_time >> (8*j)) & 0xff;
+            salt[i++] = (_time >> (8*j)) & 0xff;
 
         for (int j = 0; j < 4; j++)
-            hash[i++] = (_nonce >> (8*j)) & 0xff;
+            salt[i++] = (_nonce >> (8*j)) & 0xff;
 
         messageLength = strlen(_message);
         for (int j = 0; j < messageLength; j++)
-            hash[i++] = _message[j];
+            salt[i++] = _message[j];
 
         previousHashLength = strlen(_previousHash);
         for (int j = 0; j < previousHashLength; j++)
-            hash[i++] = _previousHash[j];
+            salt[i++] = _previousHash[j];
 
         merkleRootHashLength = strlen(_merkleRootHash);
         for (int j = 0; j < merkleRootHashLength; j++)
-            hash[i++] = _merkleRootHash[j];
+            salt[i++] = _merkleRootHash[j];
 
         for (int j = 0; j < i; j++)
-            if(hash[j] == '\0')
-                hash[j] = '/';
+            if(salt[j] == '\0')
+                salt[j] = '/';
 
-        hash[i] = '\0';
+        salt[i] = '\0';
         
-        std::cout << "SALT::" << std::endl;
-        std::cout << strlen(hash) << " :: " << hash << std::endl;
+        //std::cout << "SALT::" << std::endl;
+        //std::cout << strlen(salt) << " " << i << " :: " << salt << std::endl;
 
         // hash
         OpenSSL::SHA512_Init(ctx);
-        OpenSSL::SHA512_Update(ctx, hash, i-1);
+        OpenSSL::SHA512_Update(ctx, salt, i);
         OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
+
+        hash[i] = '\0';
                 
-        std::cout << "HASH::" << std::endl;
-        std::cout << strlen(hash) << " :: " << hash << std::endl << std::endl << std::endl;
+        //std::cout << "HASH::" << std::endl;
+        //std::cout << strlen(hash) << " :: " << hash << std::endl << std::endl << std::endl;
 
         // free
         free(ctx);
@@ -138,14 +139,16 @@ namespace howl {
         // variables 
         OpenSSL::SHA512_CTX* ctx;
         Block*  iterator;
+        char*   salt;
         char*   hash;
         int     i;
 
         // assign memory
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
-        hash = (char*) malloc(sizeof(char) * 8192);
+        salt = (char*) malloc(sizeof(char) * 64);
+        hash = (char*) malloc(sizeof(char) * 64);
 
-        std::cout << "MERKLEROOT::" << std::endl;
+        //std::cout << "MERKLEROOT::" << std::endl;
 
         // iterate
         iterator = this;
@@ -159,11 +162,11 @@ namespace howl {
             flag = true;
 
             // concat each previous hash until the genisis Block is reached
-            previousHashLength = strlen(_previousHash);
+            previousHashLength = strlen(iterator->_previousHash);
             for(int j = 0; j < previousHashLength; j++){
                 
-                hash[i++] = iterator->_previousHash[j];
-                if(i == 8190){
+                salt[i++] = iterator->_previousHash[j];
+                if(i == 64){
 
                     flag = false;
                     break;
@@ -175,32 +178,32 @@ namespace howl {
 
             if(!flag)
                 break;
-
-            //hash[i++] = '_';
-
-            // iterate to the next block
-            iterator = iterator->_previousBlock;
+            else
+                iterator = iterator->_previousBlock;
         } 
 
-        for (int j = 0; j < i; j++)
-            hash[i] = hash[i] | 0x3f;
+        //for (int j = 0; j < i; j++)
+        //    hash[i] = hash[i] | 0x3f;
+
+        for(int j = 0; j < i - 1; j++)
+            if(salt[j] == '\0' || salt[j] == '\n' || 
+                salt[j] == '\t' || salt[j] == '\"')
+                    salt[j] = '/';
+
+        salt[i] = '\0';
+
+        //std::cout << "SALT::" << std::endl;
+        //std::cout << strlen(salt) << " " << i << " :: " << salt << std::endl;
+
+        // hash
+        int res = OpenSSL::SHA512_Init(ctx);
+        res = OpenSSL::SHA512_Update(ctx, salt, i);
+        res = OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
 
         hash[i] = '\0';
 
-        for(int j = 0; j < i - 2; j++)
-            if(hash[j] == '\0' || hash[j] == '\n' || hash[j] == '\t' || hash[j] == '\"')
-                hash[j] = '/';
-        
-        std::cout << "SALT::" << std::endl;
-        std::cout << strlen(hash) << " :: " << hash << std::endl;
-
-        // hash
-        OpenSSL::SHA512_Init(ctx);
-        OpenSSL::SHA512_Update(ctx, hash, i);
-        OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
-
-        std::cout << "HASH::" << std::endl;
-        std::cout << strlen(hash) << " :: " << (unsigned char*)hash << std::endl;
+        //std::cout << "HASH::" << std::endl;
+        //std::cout << strlen(hash) << " :: " << (unsigned char*)hash << std::endl;
 
         // free
         free(ctx);

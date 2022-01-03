@@ -6,19 +6,27 @@ namespace howl {
         
         // variables
         Block* genBlock;
+        char* initialMerkleRootHash;
+        char* initialMessage;
 
         // memory
         genBlock = (Block*) malloc(sizeof(Block));
+        initialMerkleRootHash = (char*) malloc(sizeof(char) * 5);
+        initialMessage = (char*) malloc(sizeof(char) * 12);
 
         // assign
         _length = 0;
         _work = 2;
 
+        sprintf(initialMerkleRootHash, "NULL");
+        sprintf(initialMessage, "GENSISBLOCK");
+
         genBlock = new Block(
             _length++, 
             NULL, 
-            (char *) "NULL", 
-            (char *) "GENESISBLOCK");
+            initialMerkleRootHash, 
+            initialMessage);
+
         (*genBlock).mine(_work);
         _head = genBlock;
     }

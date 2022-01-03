@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cstring>
 #include <iostream>
 namespace OpenSSL {
     #include <openssl/conf.h>
