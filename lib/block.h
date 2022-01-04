@@ -1,6 +1,8 @@
 #include <sstream>
 #include <cstring>
 #include <iostream>
+#include <math.h>
+
 namespace OpenSSL {
     #include <openssl/conf.h>
     #include <openssl/bn.h>
@@ -48,7 +50,7 @@ namespace howl{
         
         // functions
         
-        char*       _calculateMerkleRootHash();
-        char*       _calculateHash();
+        int         _calculateMerkleRootHash();
+        int         _calculateHash();
     };
 }

@@ -1,6 +1,7 @@
 #include "block.h"
 
-int MAX_MESSAGE = 256;
+#define SHA512_DIGEST_LENGTH 64
+#define MAX_MESSAGE 256
 
 namespace howl {
 
@@ -52,101 +53,113 @@ namespace howl {
         bool proofOfWork;
 
         // calculate the merkleroot hash
-        _merkleRootHash = _calculateMerkleRootHash(); 
+        //_calculateMerkleRootHash(); 
+
+        _merkleRootHash = (char *) "I'VE SEEN FOOTAGE";
 
         // calculate the hash
         proofOfWork = false;
         while(!proofOfWork){
 
             _nonce++;
-            _currentHash = _calculateHash();
-
+            _calculateHash();
             proofOfWork = true;
-            for(uint32_t i = 0; i < work; i++)
-                if(_currentHash[i] != '0')
+            for(uint32_t i = 0; i < work; i++){
+
+                if(_currentHash[i] != '0'){
+
                     proofOfWork = false;
+                    free(_currentHash);
+                }
+            }
         }      
     }
 
-    char* Block::_calculateHash(){
+    int Block::_calculateHash(){
 
         // variables
-        OpenSSL::SHA512_CTX* ctx;
         char* salt;
-        char* hash;
-        int i;
+        int saltLength;
         int messageLength;
         int previousHashLength;
         int merkleRootHashLength;
+        int hashIterations;
+        int hashLength;
         
-        // assign memory
-        ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
-        salt = (char *) malloc(sizeof(char) * (1024));
-        hash = (char *) malloc(sizeof(char) * (1024));
+        messageLength = strlen(_message);
+        previousHashLength = strlen(_previousHash);
+        merkleRootHashLength = strlen(_merkleRootHash);
 
-        //std::cout << "HASHING::" << std::endl;
+        saltLength = 50 + messageLength +
+            previousHashLength + merkleRootHashLength + 1;
+        salt = (char*) malloc(sizeof(char) * saltLength);
 
         // season the hash
-        i = 0;
-        for (int j = 0; j < 4; j++)
-            salt[i++] = (_version >> (8*j)) & 0xff;
+        saltLength = sprintf(
+            salt, 
+            "%d%d%jd%s%s%s",
+            _version,
+            _nonce,
+            _time,
+            _message,
+            _previousHash,
+            _merkleRootHash);
 
-        for (int j = 0; j < 4; j++)
-            salt[i++] = (_time >> (8*j)) & 0xff;
-
-        for (int j = 0; j < 4; j++)
-            salt[i++] = (_nonce >> (8*j)) & 0xff;
-
-        messageLength = strlen(_message);
-        for (int j = 0; j < messageLength; j++)
-            salt[i++] = _message[j];
-
-        previousHashLength = strlen(_previousHash);
-        for (int j = 0; j < previousHashLength; j++)
-            salt[i++] = _previousHash[j];
-
-        merkleRootHashLength = strlen(_merkleRootHash);
-        for (int j = 0; j < merkleRootHashLength; j++)
-            salt[i++] = _merkleRootHash[j];
-
-        for (int j = 0; j < i; j++)
-            if(salt[j] == '\0')
-                salt[j] = '/';
-
-        salt[i] = '\0';
-        
+        //std::cout << "HASHING::" << std::endl;
         //std::cout << "SALT::" << std::endl;
         //std::cout << strlen(salt) << " " << i << " :: " << salt << std::endl;
 
-        // hash
-        OpenSSL::SHA512_Init(ctx);
-        OpenSSL::SHA512_Update(ctx, salt, i);
-        OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
+        hashIterations = ceil(saltLength / (SHA512_DIGEST_LENGTH - 1));
+        hashLength = (hashIterations * (SHA512_DIGEST_LENGTH - 1)) + 1;
+        _currentHash = (char*) malloc(sizeof(char) * (hashLength));
 
-        hash[i] = '\0';
-                
-        //std::cout << "HASH::" << std::endl;
-        //std::cout << strlen(hash) << " :: " << hash << std::endl << std::endl << std::endl;
+        int i = 0;
+        for(int j = 0; j < hashIterations; j++){
 
-        // free
-        free(ctx);
+            OpenSSL::SHA512_CTX* ctx;
+            int k;
+            char* iteration;
+            char* iterationHash;
 
-        return hash;
+            ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+            iteration = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+            iterationHash = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+            
+            for(k = 0; k < SHA512_DIGEST_LENGTH - 1; k++)
+                iteration[j] = salt[(j * (SHA512_DIGEST_LENGTH - 1)) + k];
+            
+            iteration[++k] = '\0';
+
+            OpenSSL::SHA512_Init(ctx);
+            OpenSSL::SHA512_Update(ctx, iteration, k);
+            OpenSSL::SHA512_Final((unsigned char*) iterationHash, ctx);
+
+            for(j = 0; j < SHA512_DIGEST_LENGTH - 1; j++)
+                _currentHash[i++] = iterationHash[j];
+
+            free(iteration);
+            free(iterationHash);
+            free(ctx);
+        }
+
+        _currentHash[i] = '\0';
+
+        free(salt);
+        return 1;
     }
 
-    char* Block::_calculateMerkleRootHash(){
+    int Block::_calculateMerkleRootHash(){
         
         // variables 
         OpenSSL::SHA512_CTX* ctx;
         Block*  iterator;
         char*   salt;
-        char*   hash;
         int     i;
 
         // assign memory
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * 64);
-        hash = (char*) malloc(sizeof(char) * 64);
+        _merkleRootHash = (char*) malloc(sizeof(char) * 64);
 
         //std::cout << "MERKLEROOT::" << std::endl;
 
@@ -198,9 +211,9 @@ namespace howl {
         // hash
         int res = OpenSSL::SHA512_Init(ctx);
         res = OpenSSL::SHA512_Update(ctx, salt, i);
-        res = OpenSSL::SHA512_Final((unsigned char*) hash, ctx);
+        res = OpenSSL::SHA512_Final((unsigned char*) _merkleRootHash, ctx);
 
-        hash[i] = '\0';
+        _merkleRootHash[i] = '\0';
 
         //std::cout << "HASH::" << std::endl;
         //std::cout << strlen(hash) << " :: " << (unsigned char*)hash << std::endl;
@@ -208,6 +221,6 @@ namespace howl {
         // free
         free(ctx);
 
-        return hash;
+        return 1;
     }
 }
