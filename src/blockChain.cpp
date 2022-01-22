@@ -2,56 +2,116 @@
 
 namespace howl {
 
-    BlockChain::BlockChain() {
+    BlockChain::BlockChain(char* chatId) {
         
-        // variables
-        Block* genBlock;
-        char* initialMerkleRootHash;
-        char* initialMessage;
+        Block*  genBlock;
+        char*   initialMerkleRootHash;
+        char*   initialMessage;
+        int     chatIdLength;
 
-        // memory
         genBlock = (Block*) malloc(sizeof(Block));
         initialMerkleRootHash = (char*) malloc(sizeof(char) * 5);
         initialMessage = (char*) malloc(sizeof(char) * 12);
+        chatIdLength = strlen(chatId);
+        _chatId = (char*) malloc(sizeof(char*) * (chatIdLength + 1));
 
-        // assign
-        _length = 0;
-        _work = 2;
+        _toLength = 0;
+        _work = 3;
 
         sprintf(initialMerkleRootHash, "NULL");
         sprintf(initialMessage, "GENSISBLOCK");
+        sprintf(_chatId, "CHAT ID");
+        //for(int i = 0; i < chatIdLength; i++)
+        //    _chatId[i] = chatId[i];
+        //chatId[chatIdLength] = '\0';
 
         genBlock = new Block(
-            _length++, 
+            _toLength++, 
             NULL, 
             initialMerkleRootHash, 
             initialMessage);
 
         (*genBlock).mine(_work);
-        _head = genBlock;
+        _toHead = genBlock;
     }
 
-    void BlockChain::addblock(char* message) {
+    char* BlockChain::addToBlock(char* message, char* publicKey){
 
-        // variables
-        Block* newBlock;
+        OpenSSL::RSA*   rsa = NULL;
+        OpenSSL::BIO*   bp;
+        Block*          newBlock;
+        char*           plaintextBlock;
+        char*           encryptedBlock = NULL;
 
-        // memory
         newBlock = (Block*) malloc(sizeof(Block));
-
-        // assign
-        newBlock = new Block(_length++, _head, (*_head).getHash(), message);
+        
+        newBlock = new Block(_toLength++, _toHead, (*_toHead).getHash(), message);
         (*newBlock).mine(_work);
-        _head = newBlock;
+        _toHead = newBlock;
+
+        plaintextBlock = _toHead->toString();
+
+        bp = OpenSSL::BIO_new_mem_buf(publicKey, strlen(publicKey));
+        OpenSSL::PEM_read_bio_RSAPublicKey(bp, &rsa, 0, 0);
+
+        encryptedBlock = (char*) malloc(sizeof(char*) * 10000);
+
+        OpenSSL::RSA_public_encrypt(
+            strlen(plaintextBlock),  //TODO maybe + 1
+            (unsigned char*) plaintextBlock,
+            (unsigned char*) encryptedBlock,
+            rsa,
+            RSA_PKCS1_PADDING);
+
+        std::cout << "addToBlock -> ::" << std::endl;
+        std::cout << "Plaintext Block:" << std::endl;
+        std::cout << "<" << plaintextBlock << ">" << std::endl;
+        std::cout << "Encrypted Block:" << std::endl;
+        std::cout << "<" << encryptedBlock << ">" << std::endl << std::endl;
+
+        free(plaintextBlock);
+        OpenSSL::RSA_free(rsa);
+        OpenSSL::BIO_free(bp);
+
+        return encryptedBlock;
+    }
+
+    void BlockChain::addFromBlock(char* encryptedBlock, char* privateKey){
+
+        OpenSSL::RSA*   rsa = NULL;
+        OpenSSL::BIO*   bp;
+        Block*          newBlock;
+        char*           plaintextBlock = NULL;
+
+        bp = OpenSSL::BIO_new_mem_buf(privateKey, strlen(privateKey));
+        OpenSSL::PEM_read_bio_RSAPrivateKey(bp, &rsa, 0, 0);
+
+        plaintextBlock = (char*) malloc(sizeof(char*) * 10000);
+        
+        OpenSSL::RSA_private_decrypt(
+            strlen(encryptedBlock) + 1,
+            (unsigned char*) encryptedBlock,
+            (unsigned char*) plaintextBlock,
+            rsa,
+            RSA_PKCS1_PADDING);
+
+        std::cout << "addFromBlock -> ::" << std::endl;
+        std::cout << "Encrypted Block:" << std::endl;
+        std::cout << "<" << encryptedBlock << ">" << std::endl;
+        std::cout << "Plaintext Block:" << std::endl;
+        std::cout << "<" << plaintextBlock << ">" << std::endl << std::endl;
+
+        OpenSSL::RSA_free(rsa);
+        OpenSSL::BIO_free(bp);
     }
 
     char* BlockChain::toString(){
 
-        return (*_head).toString();
+        return _toHead->toString();
     }
 
     Block BlockChain::_getLastblock() const {
 
-        return *_head;
+        return *_toHead;
     }
 }

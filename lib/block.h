@@ -29,7 +29,6 @@ namespace howl{
         // variables
         char*       sPrevHash;
 
-
         // accessors
         char*       getHash();
         char*       toString();
@@ -49,7 +48,6 @@ namespace howl{
         time_t      _time;
         
         // functions
-        
         int         _calculateMerkleRootHash();
         int         _calculateHash();
     };

@@ -9,21 +9,21 @@ namespace howl {
 
     public:
 
-        // constructor
-        BlockChain();
-
-        // mutators
-        void addblock(char* message);
-        char* toString();
+        BlockChain(char* chatId);
+        
+        char*       addToBlock(char* message, char* publicKey);
+        void        addFromBlock(char* encryptedBlock, char* privateKey);
+        char*       toString();
 
     private:
 
-        // variables
         uint32_t    _work;
-        uint32_t    _length;
-        Block*      _head;
+        uint32_t    _toLength;
+        uint32_t    _fromLength;
+        char*       _chatId;
+        Block*      _toHead;
+        Block*      _fromHead;
 
-        // get Last block
         Block       _getLastblock() const;
     };
 }

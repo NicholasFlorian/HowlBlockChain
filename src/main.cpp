@@ -46,11 +46,14 @@ int HOWL_char_to_BIO(char* key, BIO** bp){
     return 1;
 }
 
-int HOWL_rsa_generate(BIO** bp_public, BIO** bp_private){
+int HOWL_rsa_generate(char** publicKey, char** privateKey){
 
     // variables
     BIGNUM* big_num;    // e
     RSA*    rsa;
+    BIO*    bp_public;
+    BIO*    bp_private;
+
 
     // initialize the big number
     if(!(big_num = BN_new()))
@@ -68,17 +71,22 @@ int HOWL_rsa_generate(BIO** bp_public, BIO** bp_private){
         handleErrors();
 
     // store the public key and private key
-    *bp_public = BIO_new(BIO_s_mem());
-    if(!(PEM_write_bio_RSAPublicKey(*bp_public, rsa)))
+    bp_public = BIO_new(BIO_s_mem());
+    if(!(PEM_write_bio_RSAPublicKey(bp_public, rsa)))
         handleErrors();
 
-    *bp_private = BIO_new(BIO_s_mem());
-    if(!(PEM_write_bio_RSAPrivateKey(*bp_private, rsa, NULL, NULL, 0, NULL, NULL)))
+    bp_private = BIO_new(BIO_s_mem());
+    if(!(PEM_write_bio_RSAPrivateKey(bp_private, rsa, NULL, NULL, 0, NULL, NULL)))
         handleErrors();
+
+    HOWL_BIO_to_char(bp_public, publicKey);
+    HOWL_BIO_to_char(bp_private, privateKey);
 
     // free
     BN_free(big_num);
     RSA_free(rsa);
+    BIO_free(bp_private);
+    BIO_free(bp_public);
 
     return 1;
 }
@@ -162,22 +170,37 @@ int HOWL_sha(char* plaintext, char** hash) {
 int main(int argc, char *argv[]) {
 
     // constants
-    //BIO* bp_public = NULL;
-    //BIO* bp_private = NULL;
-    howl::BlockChain* blockChain;
+    char* userAPublic = NULL;
+    char* userAPrivate = NULL;
+    char* userBPublic = NULL;
+    char* userBPrivate = NULL;
+    howl::BlockChain* userA = NULL;
+    howl::BlockChain* userB = NULL;  
     
-    blockChain = (howl::BlockChain*) malloc(sizeof(blockChain));
-    blockChain = new howl::BlockChain();
-    std::cout << blockChain->toString() << std::endl;
+    // generate pair keys
+    HOWL_rsa_generate(&userAPublic, &userAPrivate);
+    HOWL_rsa_generate(&userBPublic, &userBPrivate);
 
-    blockChain->addblock((char *) "message 1");
-    std::cout << blockChain->toString() << std::endl;
-    
-    blockChain->addblock((char *) "message 2");
-    std::cout << blockChain->toString() << std::endl;
+    // generate the block chains for each user
+    userA = new howl::BlockChain((char *) "af13e92d44b1ac31");
+    userB = new howl::BlockChain((char *) "af13e92d44b1ac31");
 
-    blockChain->addblock((char *) "message 3");
-    std::cout << blockChain->toString() << std::endl;
+    std::cout << userA->toString() << std::endl;
+    char* temp = userA->addToBlock((char *) "message 1", userBPublic);
+    std::cout << userA->toString() << std::endl;
+
+
+    std::cout << temp << std::endl;
+
+    userB->addFromBlock(temp, userBPrivate);
+
+    free(userAPublic);
+    free(userAPrivate);
+    free(userBPublic);
+    free(userBPrivate);
+    free(userA);
+    free(userB);
+
 
     return 1;
 }
