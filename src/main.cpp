@@ -194,12 +194,12 @@ int main(int argc, char *argv[]) {
 
     userB->addFromBlock(temp, userBPrivate);
 
-    free(userAPublic);
-    free(userAPrivate);
-    free(userBPublic);
-    free(userBPrivate);
-    free(userA);
-    free(userB);
+    //free(userAPublic);
+    //free(userAPrivate);
+    //free(userBPublic);
+    //free(userBPrivate);
+    //free(userA);
+    //free(userB);
 
 
     return 1;

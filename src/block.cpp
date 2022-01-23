@@ -87,7 +87,7 @@ namespace howl {
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * saltLength);
         bitHash = (char*) malloc(sizeof(char) * (SHA512_DIGEST_LENGTH + 1));
-        _currentHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
+        _currentHash = (char*) malloc(sizeof(char) * ((SHA512_DIGEST_LENGTH * 2) + 1));
 
         saltLength = sprintf(
             salt, 
@@ -131,7 +131,7 @@ namespace howl {
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * 65536);
         bitHash = (char*) malloc(sizeof(char) * (SHA512_DIGEST_LENGTH + 1));
-        _merkleRootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
+        _merkleRootHash = (char*) malloc(sizeof(char) * ((SHA512_DIGEST_LENGTH * 2) + 1));
 
         iterator = this;
         i = 0;
