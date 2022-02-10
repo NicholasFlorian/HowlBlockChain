@@ -30,11 +30,12 @@ namespace howl {
 
         char* buffer;
 
-        buffer = (char*) malloc(sizeof(char) * 10000);
+        buffer = (char*) malloc(sizeof(char) * 513);
 
         sprintf(
             buffer, 
             "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"merkleRootHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            //"%d\n%d\n%s\n%s\n%ld",
             _version,
             _nonce,
             _previousHash,
@@ -110,7 +111,7 @@ namespace howl {
             sprintf(p, "%02x", (unsigned char) bitHash[i]);
             p += 2;
         }
-        _currentHash[SHA512_HEX_DIGEST_LENGTH + 1] = '\0';
+        _currentHash[SHA512_DIGEST_LENGTH * 2] = '\0';
 
         free(bitHash);
         free(salt);
@@ -173,7 +174,7 @@ namespace howl {
             sprintf(p, "%02x", (unsigned char) bitHash[i]);
             p += 2;
         }
-        _merkleRootHash[SHA512_HEX_DIGEST_LENGTH + 1] = '\0';
+        _merkleRootHash[SHA512_DIGEST_LENGTH * 2] = '\0';
 
         free(bitHash);
         free(salt);

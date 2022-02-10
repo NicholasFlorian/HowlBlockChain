@@ -5,6 +5,14 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <openssl/err.h>
+
+
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/ec.h>
+#include <openssl/pem.h>
+
+
 #include <iostream>
 #include <string.h>
 
@@ -12,7 +20,7 @@
 
 // const 
 const unsigned long _SSE =       RSA_F4;
-const int           _RSA_BITS =  2048;
+const int           _RSA_BITS =  4096;
 const int           _PRIMES =    2;
 
 void handleErrors(void){
@@ -33,15 +41,15 @@ int HOWL_BIO_to_char(
     
     // allocate key
     length = BIO_pending(bp);
-    *key = (char*) calloc(length + 1, 1);
+    //*key = (char*) calloc(length + 1, 1);
+    *key = (char*) malloc(sizeof(char) * (length + 1));
 
     if(!(BIO_read(bp, (unsigned char*) *key, length)))
         handleErrors();
 
-    return 1;
-}
-
-int HOWL_char_to_BIO(char* key, BIO** bp){
+    //std::cout << "CONVERTING KEY: " << length << std::endl;
+    //std::cout << strlen(*key) << std::endl;
+    //std::cout << *key << std::endl << std::endl;
 
     return 1;
 }
@@ -137,35 +145,7 @@ int HOWL_rsa_decrypt(BIO* bp_private, char* cyphertext, char** plaintext){
     return 1;
 }
 
-int HOWL_sha(char* plaintext, char** hash) {
-
-    // variables
-    SHA512_CTX* ctx;
-    int         plaintext_length;
-
-    // assign memory
-    ctx = (SHA512_CTX *) malloc(sizeof(SHA512_CTX));
-    *hash = (char*) malloc(sizeof(char) * 512);
-
-    // copy the plaintext
-    plaintext_length = strlen(plaintext);
-    for(int i = 0; i < plaintext_length; i++)
-        (*hash)[i] = plaintext[i];
-    (*hash)[plaintext_length] = '\0';
-
-    // hash
-    SHA512_Init(ctx);
-    SHA512_Update(ctx, *hash, plaintext_length);
-    SHA512_Final((unsigned char*) *hash, ctx);
-   
-    // free
-    free(ctx);
-
-    return 1;
-}
-
 //______________________________________________________________________________
-
 
 int main(int argc, char *argv[]) {
 
@@ -177,22 +157,35 @@ int main(int argc, char *argv[]) {
     howl::BlockChain* userA = NULL;
     howl::BlockChain* userB = NULL;  
     
+    OpenSSL_add_all_algorithms();
+    ERR_load_BIO_strings();
+    ERR_load_crypto_strings();
+
     // generate pair keys
-    HOWL_rsa_generate(&userAPublic, &userAPrivate);
+    //HOWL_rsa_generate(&userAPublic, &userAPrivate);
     HOWL_rsa_generate(&userBPublic, &userBPrivate);
+
+    std::cout << userBPublic << std::endl;
+    std::cout << userBPrivate << std::endl;
 
     // generate the block chains for each user
     userA = new howl::BlockChain((char *) "af13e92d44b1ac31");
     userB = new howl::BlockChain((char *) "af13e92d44b1ac31");
 
+    // display and build blocks
+    std::cout << std::endl << "DISPLAY GENISIS BLOCK:" << std::endl;
     std::cout << userA->toString() << std::endl;
+
+    std::cout << std::endl << "DISPLAY FIRST MESSAGE:" << std::endl;
     char* temp = userA->addToBlock((char *) "message 1", userBPublic);
     std::cout << userA->toString() << std::endl;
 
-
-    std::cout << temp << std::endl;
-
+    std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
     userB->addFromBlock(temp, userBPrivate);
+
+    //khh
+    std::cout << std::endl << "Nothing Personal Kid." << std::endl; 
+    ERR_print_errors_fp(stderr);
 
     //free(userAPublic);
     //free(userAPrivate);
@@ -200,7 +193,6 @@ int main(int argc, char *argv[]) {
     //free(userBPrivate);
     //free(userA);
     //free(userB);
-
 
     return 1;
 }
