@@ -13,42 +13,44 @@ namespace OpenSSL {
     #include <openssl/err.h>
 };
 
+#define SHA512_DIGEST_LENGTH        64
+#define SHA512_HEX_DIGEST_LENGTH    126
+#define MAX_MESSAGE                 256
+
 namespace howl{
 
     class Block {
         
     public:
 
-        // constructor
         Block(
             uint32_t    nIndexIn, 
             Block*      previousblock, 
             char*       previousHash, 
             char*       message);
 
-        // variables
-        char*       sPrevHash;
+        Block(char* plaintextBlock, Block* previousBlock);
 
-        // accessors
+        uint32_t    getVersion();
+        char*       getPreviousHash();
         char*       getHash();
         char*       toString();
-
         void        mine(uint32_t  work);
-        
+
     private:
 
-        // variables
+        int         _calculateMerklerootHash();
+        int         _calculateHash();
+
         uint32_t    _version;
         uint32_t    _nonce;
         Block*      _previousBlock;
         char*       _previousHash;
         char*       _currentHash;
-        char*       _merkleRootHash;
+        char*       _merklerootHash;
         char*       _message;
-        time_t      _time;
-        
-        // functions
-        int         _calculateMerkleRootHash();
-        int         _calculateHash();
+        time_t      _timeSent;
+        time_t      _timeRecieved;
+
     };
 }

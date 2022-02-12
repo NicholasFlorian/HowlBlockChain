@@ -1,9 +1,5 @@
 #include "block.h"
 
-#define SHA512_DIGEST_LENGTH 64
-#define SHA512_HEX_DIGEST_LENGTH 126
-#define MAX_MESSAGE 256
-
 namespace howl {
 
     Block::Block(
@@ -18,7 +14,45 @@ namespace howl {
         _message(message){
         
         _nonce = 0;
-        _time = time(nullptr); // set the current time
+        _timeSent = time(nullptr); // set the current time
+    }
+
+    Block::Block(char* plaintextBlock, Block* previousBlock){
+
+        //uint32_t    version;
+        //uint32_t    nonce;
+        //char*       previousHash;
+        //char*       merklerootHash;
+        //char*       message;
+        //time_t      timeSent;
+        //time_t      timeRecieved;
+
+        _previousHash = (char*) malloc(sizeof(char) * 1000);
+        _message = (char*) malloc(sizeof(char) * 1000);
+
+        sscanf(
+            plaintextBlock,
+            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            &_version,
+            &_nonce,
+            _previousHash,
+            _message,
+            &_timeSent);
+            
+        _previousBlock = previousBlock;
+        _timeRecieved = time(nullptr);
+        _calculateHash();
+        _calculateMerklerootHash();
+    }
+
+    uint32_t Block::getVersion(){
+
+        return _version;
+    }
+    
+    char* Block::getPreviousHash(){
+
+        return _previousHash;
     }
 
     char* Block::getHash(){
@@ -34,14 +68,13 @@ namespace howl {
 
         sprintf(
             buffer, 
-            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"merkleRootHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
             //"%d\n%d\n%s\n%s\n%ld",
             _version,
             _nonce,
             _previousHash,
-            _merkleRootHash,
             _message,
-            _time);
+            _timeSent);
 
         return buffer;
     }
@@ -50,7 +83,7 @@ namespace howl {
     
         bool proofOfWork;
 
-        _calculateMerkleRootHash(); 
+        _calculateMerklerootHash(); 
         proofOfWork = false;
         while(!proofOfWork){
 
@@ -72,67 +105,67 @@ namespace howl {
 
         OpenSSL::SHA512_CTX* ctx;
         char*   salt;
-        char*   bitHash;
+        char*   buffer;
         char*   p; 
         int     saltLength;
         int     messageLength;
         int     previousHashLength;
-        int     merkleRootHashLength;
+        int     merklerootHashLength;
         
         messageLength = strlen(_message);
         previousHashLength = strlen(_previousHash);
-        merkleRootHashLength = strlen(_merkleRootHash);
+        merklerootHashLength = strlen(_merklerootHash);
         saltLength = 50 + messageLength +
-            previousHashLength + merkleRootHashLength + 1;
+            previousHashLength + merklerootHashLength + 1;
 
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * saltLength);
-        bitHash = (char*) malloc(sizeof(char) * (SHA512_DIGEST_LENGTH + 1));
-        _currentHash = (char*) malloc(sizeof(char) * ((SHA512_DIGEST_LENGTH * 2) + 1));
+        buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+        _currentHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
 
         saltLength = sprintf(
             salt, 
             "%d%d%jd%s%s%s",
             _version,
             _nonce,
-            _time,
+            _timeSent,
             _message,
             _previousHash,
-            _merkleRootHash);
+            _merklerootHash);
 
         OpenSSL::SHA512_Init(ctx);
         OpenSSL::SHA512_Update(ctx, salt, saltLength);
-        OpenSSL::SHA512_Final((unsigned char*) bitHash, ctx);
-        bitHash[SHA512_DIGEST_LENGTH] = '\0';
+        OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        buffer[SHA512_DIGEST_LENGTH] = '\0';
 
         p =  _currentHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
-            sprintf(p, "%02x", (unsigned char) bitHash[i]);
+            sprintf(p, "%02x", (unsigned char) buffer[i]);
             p += 2;
         }
-        _currentHash[SHA512_DIGEST_LENGTH * 2] = '\0';
+        _currentHash[SHA512_HEX_DIGEST_LENGTH] = '\0';
 
-        free(bitHash);
+        free(buffer);
         free(salt);
         free(ctx);
 
         return 1;
     }
 
-    int Block::_calculateMerkleRootHash(){
+    int Block::_calculateMerklerootHash(){
         
         OpenSSL::SHA512_CTX* ctx;
         Block*  iterator;
         char*   salt;
-        char*   bitHash;
+        char*   buffer;
         char*   p;
         int     i;
 
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * 65536);
-        bitHash = (char*) malloc(sizeof(char) * (SHA512_DIGEST_LENGTH + 1));
-        _merkleRootHash = (char*) malloc(sizeof(char) * ((SHA512_DIGEST_LENGTH * 2) + 1));
+        buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+        _merklerootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
 
         iterator = this;
         i = 0;
@@ -165,18 +198,18 @@ namespace howl {
 
         OpenSSL::SHA512_Init(ctx);
         OpenSSL::SHA512_Update(ctx, salt, i);
-        OpenSSL::SHA512_Final((unsigned char*) bitHash, ctx);
-        _merkleRootHash[SHA512_DIGEST_LENGTH] = '\0';
+        OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        _merklerootHash[SHA512_DIGEST_LENGTH] = '\0';
 
-        p =  _merkleRootHash;
+        p =  _merklerootHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
-            sprintf(p, "%02x", (unsigned char) bitHash[i]);
+            sprintf(p, "%02x", (unsigned char) buffer[i]);
             p += 2;
         }
-        _merkleRootHash[SHA512_DIGEST_LENGTH * 2] = '\0';
+        _merklerootHash[SHA512_HEX_DIGEST_LENGTH] = '\0';
 
-        free(bitHash);
+        free(buffer);
         free(salt);
         free(ctx);
 

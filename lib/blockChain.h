@@ -3,6 +3,12 @@
 
 #include "block.h"
 
+#define SSE                         RSA_F4
+#define RSA_BITS                    4096
+#define RSA_DIGEST_LENGTH           512
+#define RSA_HEX_DIGEST_LENGTH       1024
+#define RSA_PRIMES                  2
+
 namespace howl {
 
     class BlockChain {
@@ -11,18 +17,20 @@ namespace howl {
 
         BlockChain(char* chatId);
         
-        char*       addToBlock(char* message, char* publicKey);
-        void        addFromBlock(char* encryptedBlock, char* privateKey);
+        char*       addSentBlock(char* message, char* publicKey);
+        void        addReceivedBlock(char* encryptedBlock, char* privateKey);
+        void        addPrevSentBlock(char* encryptedBlock);
+        void        addPrevReceivedBlock(char* encryptedBlock);
         char*       toString();
 
     private:
 
-        uint32_t    _work;
-        uint32_t    _toLength;
-        uint32_t    _fromLength;
         char*       _chatId;
-        Block*      _toHead;
-        Block*      _fromHead;
+        uint32_t    _work;
+        uint32_t    _sentLength;
+        uint32_t    _receivedLength;
+        Block*      _sentHead;
+        Block*      _receivedHead;
 
         Block       _getLastblock() const;
     };

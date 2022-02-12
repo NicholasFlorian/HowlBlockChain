@@ -6,22 +6,10 @@
 #include <openssl/sha.h>
 #include <openssl/err.h>
 
-
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/ec.h>
-#include <openssl/pem.h>
-
-
 #include <iostream>
 #include <string.h>
 
 #include "blockChain.h"
-
-// const 
-const unsigned long _SSE =       RSA_F4;
-const int           _RSA_BITS =  4096;
-const int           _PRIMES =    2;
 
 void handleErrors(void){
     
@@ -67,7 +55,7 @@ int HOWL_rsa_generate(char** publicKey, char** privateKey){
     if(!(big_num = BN_new()))
         handleErrors();
 
-    if(!(BN_set_word(big_num, _SSE)))
+    if(!(BN_set_word(big_num, SSE)))
         handleErrors();
 
     // initialize the rsa structure and generate the key
@@ -75,7 +63,7 @@ int HOWL_rsa_generate(char** publicKey, char** privateKey){
         handleErrors();
 
     // generate private and public keys 
-    if(!(RSA_generate_multi_prime_key(rsa, _RSA_BITS, _PRIMES, big_num, NULL)))
+    if(!(RSA_generate_multi_prime_key(rsa, RSA_BITS, RSA_PRIMES, big_num, NULL)))
         handleErrors();
 
     // store the public key and private key
@@ -177,11 +165,11 @@ int main(int argc, char *argv[]) {
     std::cout << userA->toString() << std::endl;
 
     std::cout << std::endl << "DISPLAY FIRST MESSAGE:" << std::endl;
-    char* temp = userA->addToBlock((char *) "message 1", userBPublic);
+    char* temp = userA->addSentBlock((char *) "message 1", userBPublic);
     std::cout << userA->toString() << std::endl;
 
     std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
-    userB->addFromBlock(temp, userBPrivate);
+    userB->addReceivedBlock(temp, userBPrivate);
 
     //khh
     std::cout << std::endl << "Nothing Personal Kid." << std::endl; 
