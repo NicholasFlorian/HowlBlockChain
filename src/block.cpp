@@ -1,3 +1,4 @@
+#include <regex>
 #include "block.h"
 
 namespace howl {
@@ -27,11 +28,17 @@ namespace howl {
         //time_t      timeSent;
         //time_t      timeRecieved;
 
+        char* buffer;
+
+        buffer = (char*) malloc(sizeof(char) * 1000);
         _previousHash = (char*) malloc(sizeof(char) * 1000);
         _message = (char*) malloc(sizeof(char) * 1000);
 
-        sscanf(
-            plaintextBlock,
+        std::regex regexp("\"\n\t");
+        buffer = std::regex_replace(plaintextBlock, regexp, " \"\n\t");
+
+        int val = sscanf(
+            buffer,
             "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
             &_version,
             &_nonce,
@@ -39,6 +46,8 @@ namespace howl {
             _message,
             &_timeSent);
             
+        std::cout << "VAL: " << val << std::endl;
+
         _previousBlock = previousBlock;
         _timeRecieved = time(nullptr);
         _calculateHash();
@@ -61,6 +70,26 @@ namespace howl {
     }
 
     char* Block::toString(){
+        
+        char* buffer;
+
+        buffer = (char*) malloc(sizeof(char) * 1000);
+
+        sprintf(
+            buffer, 
+            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"currentHash\":\"%s\"\n\t\"merklerootHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            _version,
+            _nonce,
+            _previousHash,
+            _currentHash,
+            _merklerootHash,
+            _message,
+            _timeSent);
+
+        return buffer;
+    }
+
+    char* Block::toJSON(){
 
         char* buffer;
 
@@ -69,7 +98,6 @@ namespace howl {
         sprintf(
             buffer, 
             "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
-            //"%d\n%d\n%s\n%s\n%ld",
             _version,
             _nonce,
             _previousHash,
@@ -121,7 +149,7 @@ namespace howl {
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * saltLength);
         buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
-        _currentHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
+        _currentHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
 
         saltLength = sprintf(
             salt, 
@@ -136,13 +164,13 @@ namespace howl {
         OpenSSL::SHA512_Init(ctx);
         OpenSSL::SHA512_Update(ctx, salt, saltLength);
         OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
-        buffer[SHA512_DIGEST_LENGTH] = '\0';
-
         p =  _currentHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
             sprintf(p, "%02x", (unsigned char) buffer[i]);
-            p += 2;
+
+            if(i != SHA512_DIGEST_LENGTH - 2)
+                p += 2;
         }
         _currentHash[SHA512_HEX_DIGEST_LENGTH] = '\0';
 
@@ -165,31 +193,29 @@ namespace howl {
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * 65536);
         buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
-        _merklerootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 1));
+        _merklerootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
 
         iterator = this;
-        i = 0;
+        salt[0] = 'm';
+        i = 1;
         while(true){
     
-            bool    flag;
-            int     previousHashLength;
+            int hashLength;
 
-            flag = true;
-            previousHashLength = strlen(iterator->_previousHash);
-            for(int j = 0; j < previousHashLength; j++){
-                
-                salt[i++] = iterator->_previousHash[j];
-                if(i == 65536){
-
-                    flag = false;
-                    break;
-                }
-            }
-
-            if(!flag || iterator->_version == 0)
+            if(iterator->_version == 0)
                 break;
             else
                 iterator = iterator->_previousBlock;
+                
+            hashLength = strlen(iterator->_currentHash);
+            for(int j = 0; j < hashLength; j++){
+                
+                salt[i++] = iterator->_currentHash[j];
+                if(i == 65536)
+                    break;
+            }
+
+            
         } 
         salt[i] = '\0';
 
@@ -199,13 +225,14 @@ namespace howl {
         OpenSSL::SHA512_Init(ctx);
         OpenSSL::SHA512_Update(ctx, salt, i);
         OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
-        _merklerootHash[SHA512_DIGEST_LENGTH] = '\0';
 
         p =  _merklerootHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
             sprintf(p, "%02x", (unsigned char) buffer[i]);
-            p += 2;
+
+            if(i != SHA512_DIGEST_LENGTH - 2)
+                p += 2;
         }
         _merklerootHash[SHA512_HEX_DIGEST_LENGTH] = '\0';
 

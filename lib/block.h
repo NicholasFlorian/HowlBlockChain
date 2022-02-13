@@ -35,12 +35,15 @@ namespace howl{
         char*       getPreviousHash();
         char*       getHash();
         char*       toString();
+        char*       toJSON();
         void        mine(uint32_t  work);
 
-    private:
+    protected:
 
         int         _calculateMerklerootHash();
         int         _calculateHash();
+
+    private:
 
         uint32_t    _version;
         uint32_t    _nonce;

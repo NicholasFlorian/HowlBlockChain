@@ -13,6 +13,7 @@ namespace howl {
         _chatId = (char*) malloc(sizeof(char*) * (SHA512_HEX_DIGEST_LENGTH + 1));
 
         _sentLength = 0;
+        _receivedLength = 0;
         _work = 3;
 
         sprintf(initialPreviousHash, "NULL");
@@ -27,6 +28,7 @@ namespace howl {
 
         (*genBlock).mine(_work);
         _sentHead = genBlock;
+        _receivedHead = NULL;
     }
 
     char* BlockChain::addSentBlock(char* message, char* publicKey){
@@ -48,7 +50,7 @@ namespace howl {
         (*newBlock).mine(_work);
         _sentHead = newBlock;
 
-        plaintextBlock = _sentHead->toString();
+        plaintextBlock = _sentHead->toJSON();
         buffer = (char*) malloc(sizeof(char) * RSA_DIGEST_LENGTH);
         encryptedBlock = (char*) malloc(sizeof(char) * (RSA_HEX_DIGEST_LENGTH + 1));
 

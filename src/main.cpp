@@ -153,8 +153,8 @@ int main(int argc, char *argv[]) {
     //HOWL_rsa_generate(&userAPublic, &userAPrivate);
     HOWL_rsa_generate(&userBPublic, &userBPrivate);
 
-    std::cout << userBPublic << std::endl;
-    std::cout << userBPrivate << std::endl;
+    //std::cout << userBPublic << std::endl;
+    //std::cout << userBPrivate << std::endl;
 
     // generate the block chains for each user
     userA = new howl::BlockChain((char *) "af13e92d44b1ac31");
