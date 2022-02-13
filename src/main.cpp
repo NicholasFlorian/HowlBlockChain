@@ -156,20 +156,28 @@ int main(int argc, char *argv[]) {
     //std::cout << userBPublic << std::endl;
     //std::cout << userBPrivate << std::endl;
 
-    // generate the block chains for each user
+    ////////////////////////////////////////////////////////////////////////////
     userA = new howl::BlockChain((char *) "af13e92d44b1ac31");
     userB = new howl::BlockChain((char *) "af13e92d44b1ac31");
 
-    // display and build blocks
     std::cout << std::endl << "DISPLAY GENISIS BLOCK:" << std::endl;
     std::cout << userA->toString() << std::endl;
+    
+    std::cout << std::endl << "SEND GENISIS TO OTHER:" << std::endl;
+    char* temp1 = userA->getEncryptedBlock(userBPublic);
+    userB->addReceivedBlock(temp1, userBPrivate);
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    userA->addSentBlock((char *) "message 1");
 
     std::cout << std::endl << "DISPLAY FIRST MESSAGE:" << std::endl;
-    char* temp = userA->addSentBlock((char *) "message 1", userBPublic);
     std::cout << userA->toString() << std::endl;
 
     std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
-    userB->addReceivedBlock(temp, userBPrivate);
+    char* temp2 = userA->getEncryptedBlock(userBPublic);
+    userB->addReceivedBlock(temp2, userBPrivate);
+
 
     //khh
     std::cout << std::endl << "Nothing Personal Kid." << std::endl; 

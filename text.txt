@@ -1,0 +1,35 @@
+
+DISPLAY GENISIS BLOCK:
+{
+	"version":0
+	"nonce":4832
+	"previousHash":"NULL"
+	"currentHash":"000e2301a849be383ac17078073366e222086ff9780d2690d45c80051dad50b75bc2bbfde9ffeb272e80f67e0da82bc7b2f13fcee378103659dd6e2aaa9f4f"
+	"merklerootHash":"f14aae6a0e050b74e4b7b9a5b2ef1a60ceccbbca39b132ae3e8bf88d3a946c6d8687f3266fd2b626419d8b67dcf1d8d7c0fe72d4919d9bd05efbd37070cf1a"
+	"message":"GENSISBLOCK"
+	"time":1644780789
+}
+
+DISPLAY FIRST MESSAGE:
+{
+	"version":1
+	"nonce":758
+	"previousHash":"000e2301a849be383ac17078073366e222086ff9780d2690d45c80051dad50b75bc2bbfde9ffeb272e80f67e0da82bc7b2f13fcee378103659dd6e2aaa9f4f"
+	"currentHash":"0000652b295b52fa9927be5c7d01ff259b47ac3c7f6d92d381c797733891d494aecc00db2d6a31a90b86e822c65d039fe5c55aa642b482d031405cb00bb3b3"
+	"merklerootHash":"6ae01370fd8ab6d701f67dccf6a2daed9dd8ba1d545f61c9161bcfc61b235fc965db60225ec7a2058dad6bc5dc1e80d3520714441661d37f3b355831774f1b"
+	"message":"message 1"
+	"time":1644780789
+}
+
+SEND MESSAGE TO OTHER:
+Parsing Block
+{
+	"version":1
+	"nonce":758
+	"previousHash":"000e2301a849be383ac17078073366e222086ff9780d2690d45c80051dad50b75bc2bbfde9ffeb272e80f67e0da82bc7b2f13fcee378103659dd6e2aaa9f4f"
+	"message":"message 1"
+	"time":1644780789
+}
+VAL: -1
+
+Nothing Personal Kid.

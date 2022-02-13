@@ -1,4 +1,3 @@
-#include <regex>
 #include "block.h"
 
 namespace howl {
@@ -34,24 +33,20 @@ namespace howl {
         _previousHash = (char*) malloc(sizeof(char) * 1000);
         _message = (char*) malloc(sizeof(char) * 1000);
 
-        std::regex regexp("\"\n\t");
-        buffer = std::regex_replace(plaintextBlock, regexp, " \"\n\t");
-
         int val = sscanf(
-            buffer,
-            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%s\"\n\t\"message\":\"%s\"\n\t\"time\":%ld\n}",
+            plaintextBlock,
+            "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%[^\"]\"\n\t\"message\":\"%[^\"]\"\n\t\"time\":%ld\n}",
             &_version,
             &_nonce,
             _previousHash,
             _message,
             &_timeSent);
-            
-        std::cout << "VAL: " << val << std::endl;
 
         _previousBlock = previousBlock;
         _timeRecieved = time(nullptr);
-        _calculateHash();
+        
         _calculateMerklerootHash();
+        //_calculateHash();
     }
 
     uint32_t Block::getVersion(){
@@ -191,13 +186,12 @@ namespace howl {
         int     i;
 
         ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
-        salt = (char*) malloc(sizeof(char) * 65536);
+        salt = (char*) malloc(sizeof(char) * (MERKLEROOT_SALT + 1));
         buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
         _merklerootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
 
         iterator = this;
-        salt[0] = 'm';
-        i = 1;
+        i = 0;
         while(true){
     
             int hashLength;
@@ -211,7 +205,7 @@ namespace howl {
             for(int j = 0; j < hashLength; j++){
                 
                 salt[i++] = iterator->_currentHash[j];
-                if(i == 65536)
+                if(i == MERKLEROOT_SALT)
                     break;
             }
 

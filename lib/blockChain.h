@@ -17,11 +17,12 @@ namespace howl {
 
         BlockChain(char* chatId);
         
-        char*       addSentBlock(char* message, char* publicKey);
+        void        addSentBlock(char* message);
         void        addReceivedBlock(char* encryptedBlock, char* privateKey);
         void        addPrevSentBlock(char* encryptedBlock);
         void        addPrevReceivedBlock(char* encryptedBlock);
         char*       toString();
+        char*       getEncryptedBlock(char* publicKey);
 
     private:
 

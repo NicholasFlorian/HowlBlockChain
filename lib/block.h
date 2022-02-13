@@ -16,6 +16,7 @@ namespace OpenSSL {
 #define SHA512_DIGEST_LENGTH        64
 #define SHA512_HEX_DIGEST_LENGTH    126
 #define MAX_MESSAGE                 256
+#define MERKLEROOT_SALT             65536              
 
 namespace howl{
 

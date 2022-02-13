@@ -31,15 +31,9 @@ namespace howl {
         _receivedHead = NULL;
     }
 
-    char* BlockChain::addSentBlock(char* message, char* publicKey){
+    void BlockChain::addSentBlock(char* message){
 
-        OpenSSL::RSA*   rsa = NULL;
-        OpenSSL::BIO*   bp;
         Block*          newBlock;
-        char*           plaintextBlock;
-        char*           buffer;
-        char*           encryptedBlock;
-        char*           p;
 
         newBlock = new Block(
             _sentLength++, 
@@ -49,43 +43,6 @@ namespace howl {
 
         (*newBlock).mine(_work);
         _sentHead = newBlock;
-
-        plaintextBlock = _sentHead->toJSON();
-        buffer = (char*) malloc(sizeof(char) * RSA_DIGEST_LENGTH);
-        encryptedBlock = (char*) malloc(sizeof(char) * (RSA_HEX_DIGEST_LENGTH + 1));
-
-        bp = OpenSSL::BIO_new_mem_buf(publicKey, -1); //strlen(publicKey)
-        OpenSSL::PEM_read_bio_RSAPublicKey(bp, &rsa, 0, 0);
-
-        buffer = (char*) malloc(sizeof(char*) * RSA_DIGEST_LENGTH);
-
-        int val = OpenSSL::RSA_public_encrypt(
-            strlen(plaintextBlock) + 1,  //TODO maybe + 1
-            (unsigned char*) plaintextBlock,
-            (unsigned char*) buffer,
-            rsa,
-            RSA_PKCS1_OAEP_PADDING);
-
-        p =  encryptedBlock;
-        for(int i = 0; i < RSA_DIGEST_LENGTH; i++){
-
-            sprintf(p, "%02x", (unsigned char) buffer[i]);
-            p += 2;
-        }
-        encryptedBlock[RSA_HEX_DIGEST_LENGTH] = '\0';
-
-        //std::cout << val << " addSentBlock -> ::" << std::endl;
-        //std::cout << "Plaintext Block:" << std::endl;
-        //std::cout << "<" << plaintextBlock << ">" << std::endl;
-        //std::cout << "Encrypted Block:" << std::endl;
-        //std::cout << "<" << encryptedBlock << ">" << std::endl << std::endl;
-
-        OpenSSL::RSA_free(rsa);
-        OpenSSL::BIO_free(bp);
-        //free(plaintextBlock);
-        //free(buffer);
-
-        return buffer;
     }
 
     void BlockChain::addReceivedBlock(char* encryptedBlock, char* privateKey){
@@ -141,6 +98,53 @@ namespace howl {
     char* BlockChain::toString(){
 
         return _sentHead->toString();
+    }
+
+    char* BlockChain::getEncryptedBlock(char* publicKey){
+
+        OpenSSL::RSA*   rsa = NULL;
+        OpenSSL::BIO*   bp;
+        char*           plaintextBlock;
+        char*           buffer;
+        char*           encryptedBlock;
+        char*           p;
+
+        plaintextBlock = _sentHead->toJSON();
+        buffer = (char*) malloc(sizeof(char) * RSA_DIGEST_LENGTH);
+        encryptedBlock = (char*) malloc(sizeof(char) * (RSA_HEX_DIGEST_LENGTH + 1));
+
+        bp = OpenSSL::BIO_new_mem_buf(publicKey, -1); //strlen(publicKey)
+        OpenSSL::PEM_read_bio_RSAPublicKey(bp, &rsa, 0, 0);
+
+        buffer = (char*) malloc(sizeof(char*) * RSA_DIGEST_LENGTH);
+
+        int val = OpenSSL::RSA_public_encrypt(
+            strlen(plaintextBlock) + 1,  //TODO maybe + 1
+            (unsigned char*) plaintextBlock,
+            (unsigned char*) buffer,
+            rsa,
+            RSA_PKCS1_OAEP_PADDING);
+
+        p = encryptedBlock;
+        for(int i = 0; i < RSA_DIGEST_LENGTH; i++){
+
+            sprintf(p, "%02x", (unsigned char) buffer[i]);
+            p += 2;
+        }
+        encryptedBlock[RSA_HEX_DIGEST_LENGTH] = '\0';
+
+        //std::cout << val << " addSentBlock -> ::" << std::endl;
+        //std::cout << "Plaintext Block:" << std::endl;
+        //std::cout << "<" << plaintextBlock << ">" << std::endl;
+        //std::cout << "Encrypted Block:" << std::endl;
+        //std::cout << "<" << encryptedBlock << ">" << std::endl << std::endl;
+
+        OpenSSL::RSA_free(rsa);
+        OpenSSL::BIO_free(bp);
+        //free(plaintextBlock);
+        //free(buffer);
+
+        return buffer;
     }
 
     Block BlockChain::_getLastblock() const {
