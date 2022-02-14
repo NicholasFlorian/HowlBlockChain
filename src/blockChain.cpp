@@ -6,17 +6,23 @@ namespace howl {
         
         Block*  genBlock;
         char*   initialPreviousHash;
+        char*   initialCurrentHash;
+        char*   initialMerklerootHash;
         char*   initialMessage;
 
         initialPreviousHash = (char*) malloc(sizeof(char) * 5);
+        initialCurrentHash = (char*) malloc(sizeof(char) * 5);
+        initialMerklerootHash = (char*) malloc(sizeof(char) * 5);
         initialMessage = (char*) malloc(sizeof(char) * 12);
         _chatId = (char*) malloc(sizeof(char*) * (SHA512_HEX_DIGEST_LENGTH + 1));
 
         _sentLength = 0;
         _receivedLength = 0;
-        _work = 3;
+        _work = 1;
 
         sprintf(initialPreviousHash, "NULL");
+        sprintf(initialCurrentHash, "NULL");
+        sprintf(initialMerklerootHash, "NULL");
         sprintf(initialMessage, "GENSISBLOCK");
         sprintf(_chatId, "%s", chatId);
 
@@ -24,6 +30,8 @@ namespace howl {
             _sentLength++, 
             NULL, 
             initialPreviousHash, 
+            initialCurrentHash,
+            initialMerklerootHash,
             initialMessage);
 
         (*genBlock).mine(_work);
@@ -33,7 +41,7 @@ namespace howl {
 
     void BlockChain::addSentBlock(char* message){
 
-        Block*          newBlock;
+        Block* newBlock;
 
         newBlock = new Block(
             _sentLength++, 
@@ -67,27 +75,25 @@ namespace howl {
         if(_receivedHead == NULL){
         
             newBlock = new Block(plaintextBlock, NULL);
+            
+            if(newBlock->getVersion() != 0)
+                std::cout << "\tVersion Failed" << std::endl;
+
             _receivedHead = newBlock;
         }
         else{
 
             newBlock = new Block(plaintextBlock, _receivedHead);
 
-            if(newBlock->getVersion() != _receivedLength)
+            if(newBlock->getVersion() != _receivedLength + 1)
                 std::cout << "\tVersion Failed" << std::endl;
                 
-            if(strcmp(newBlock->getPreviousHash(), _receivedHead->getHash()) == 0)
+            if(strcmp(newBlock->getPreviousHash(), _receivedHead->getHash()) != 0)
                 std::cout << "\tPrevious Hash Failed" << std::endl;
 
             _receivedHead = newBlock;
             _receivedLength++;
         }
-    
-        //std::cout << "addReceivedBlock -> ::" << std::endl;
-        //std::cout << "Encrypted Block:" << std::endl;
-        //std::cout << "<" << encryptedBlock << ">" << std::endl;
-        //std::cout << "Plaintext Block:" << std::endl;
-        //std::cout << "<" << plaintextBlock << ">" << std::endl << std::endl;
 
         OpenSSL::RSA_free(rsa);
         OpenSSL::BIO_free(bp);
@@ -133,22 +139,20 @@ namespace howl {
         }
         encryptedBlock[RSA_HEX_DIGEST_LENGTH] = '\0';
 
-        //std::cout << val << " addSentBlock -> ::" << std::endl;
-        //std::cout << "Plaintext Block:" << std::endl;
-        //std::cout << "<" << plaintextBlock << ">" << std::endl;
-        //std::cout << "Encrypted Block:" << std::endl;
-        //std::cout << "<" << encryptedBlock << ">" << std::endl << std::endl;
-
         OpenSSL::RSA_free(rsa);
         OpenSSL::BIO_free(bp);
         //free(plaintextBlock);
-        //free(buffer);
 
         return buffer;
     }
 
-    Block BlockChain::_getLastblock() const {
+    Block* BlockChain::getLastSentBlock() {
 
-        return *_sentHead;
+        return _sentHead;
+    }
+
+    Block* BlockChain::getLastReceivedBlock() {
+
+        return _receivedHead;
     }
 }

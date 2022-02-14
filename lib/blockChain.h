@@ -23,6 +23,8 @@ namespace howl {
         void        addPrevReceivedBlock(char* encryptedBlock);
         char*       toString();
         char*       getEncryptedBlock(char* publicKey);
+        Block*      getLastSentBlock();
+        Block*      getLastReceivedBlock();
 
     private:
 
@@ -32,7 +34,5 @@ namespace howl {
         uint32_t    _receivedLength;
         Block*      _sentHead;
         Block*      _receivedHead;
-
-        Block       _getLastblock() const;
     };
 }

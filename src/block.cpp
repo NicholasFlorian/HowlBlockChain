@@ -15,6 +15,27 @@ namespace howl {
         
         _nonce = 0;
         _timeSent = time(nullptr); // set the current time
+        _timeRecieved = 0;
+    }
+
+    Block::Block(
+        uint32_t index, 
+        Block* previousBlock, 
+        char* previousHash, 
+        char* currentHash,
+        char* merklerootHash,
+        char* message): 
+
+        _version(index),
+        _previousBlock(previousBlock),
+        _previousHash(previousHash),
+        _currentHash(currentHash),
+        _merklerootHash(merklerootHash),
+        _message(message){
+        
+        _nonce = 0;
+        _timeSent = time(nullptr); // set the current time
+        _timeRecieved = 0;
     }
 
     Block::Block(char* plaintextBlock, Block* previousBlock){
@@ -46,7 +67,9 @@ namespace howl {
         _timeRecieved = time(nullptr);
         
         _calculateMerklerootHash();
-        //_calculateHash();
+        _calculateHash();
+
+        free(buffer);
     }
 
     uint32_t Block::getVersion(){
@@ -118,7 +141,8 @@ namespace howl {
                 if(_currentHash[i] != '0'){
 
                     proofOfWork = false;
-                    //free(_currentHash);
+                    free(_currentHash);
+                    break;
                 }
             }
         }      
@@ -220,7 +244,7 @@ namespace howl {
         OpenSSL::SHA512_Update(ctx, salt, i);
         OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
 
-        p =  _merklerootHash;
+        p = _merklerootHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
             sprintf(p, "%02x", (unsigned char) buffer[i]);

@@ -161,11 +161,12 @@ int main(int argc, char *argv[]) {
     userB = new howl::BlockChain((char *) "af13e92d44b1ac31");
 
     std::cout << std::endl << "DISPLAY GENISIS BLOCK:" << std::endl;
-    std::cout << userA->toString() << std::endl;
+    std::cout << userA->getLastSentBlock()->toString() << std::endl;
     
     std::cout << std::endl << "SEND GENISIS TO OTHER:" << std::endl;
     char* temp1 = userA->getEncryptedBlock(userBPublic);
     userB->addReceivedBlock(temp1, userBPrivate);
+    std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -177,7 +178,18 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
     char* temp2 = userA->getEncryptedBlock(userBPublic);
     userB->addReceivedBlock(temp2, userBPrivate);
+    std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
 
+    ////////////////////////////////////////////////////////////////////////////
+    userA->addSentBlock((char *) "message 2");
+
+    std::cout << std::endl << "DISPLAY SECOND MESSAGE:" << std::endl;
+    std::cout << userA->toString() << std::endl;
+
+    std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
+    char* temp3 = userA->getEncryptedBlock(userBPublic);
+    userB->addReceivedBlock(temp3, userBPrivate);
+    std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
 
     //khh
     std::cout << std::endl << "Nothing Personal Kid." << std::endl; 
