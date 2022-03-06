@@ -18,7 +18,7 @@ namespace howl {
 
         _sentLength = 0;
         _receivedLength = 0;
-        _work = 1;
+        _work = 3;
 
         sprintf(initialPreviousHash, "NULL");
         sprintf(initialCurrentHash, "NULL");
