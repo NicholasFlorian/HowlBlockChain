@@ -32,6 +32,14 @@ namespace howl{
             char*       previousHash, 
             char*       message);
 
+        Block(
+            uint32_t index, 
+            Block* previousBlock, 
+            char* previousHash, 
+            char* currentHash,
+            char* merklerootHash,
+            char* message);
+
         Block(char* plaintextBlock, Block* previousBlock);
 
         uint32_t    getVersion();
