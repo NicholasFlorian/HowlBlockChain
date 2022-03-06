@@ -47,17 +47,17 @@ namespace howl {
 
     void BlockChain::addReceivedBlock(char* encryptedBlock, char* privateKey){
 
-        OpenSSL::RSA*   rsa = NULL;
-        OpenSSL::BIO*   bp;
+        openSSL::RSA*   rsa = NULL;
+        openSSL::BIO*   bp;
         Block*          newBlock;
         char*           plaintextBlock = NULL;
 
-        bp = OpenSSL::BIO_new_mem_buf(privateKey, -1);
-        OpenSSL::PEM_read_bio_RSAPrivateKey(bp, &rsa, 0, 0);
+        bp = openSSL::BIO_new_mem_buf(privateKey, -1);
+        openSSL::PEM_read_bio_RSAPrivateKey(bp, &rsa, 0, 0);
 
         plaintextBlock = (char*) malloc(sizeof(char*) * (RSA_DIGEST_LENGTH + 1));
         
-        OpenSSL::RSA_private_decrypt(
+        openSSL::RSA_private_decrypt(
             RSA_DIGEST_LENGTH ,
             (unsigned char*) encryptedBlock,
             (unsigned char*) plaintextBlock,
@@ -89,8 +89,8 @@ namespace howl {
         //std::cout << "Plaintext Block:" << std::endl;
         //std::cout << "<" << plaintextBlock << ">" << std::endl << std::endl;
 
-        OpenSSL::RSA_free(rsa);
-        OpenSSL::BIO_free(bp);
+        openSSL::RSA_free(rsa);
+        openSSL::BIO_free(bp);
         //free(encryptedBlock);
         //free(plaintextBlock);
     }
@@ -102,8 +102,8 @@ namespace howl {
 
     char* BlockChain::getEncryptedBlock(char* publicKey){
 
-        OpenSSL::RSA*   rsa = NULL;
-        OpenSSL::BIO*   bp;
+        openSSL::RSA*   rsa = NULL;
+        openSSL::BIO*   bp;
         char*           plaintextBlock;
         char*           buffer;
         char*           encryptedBlock;
@@ -113,12 +113,13 @@ namespace howl {
         buffer = (char*) malloc(sizeof(char) * RSA_DIGEST_LENGTH);
         encryptedBlock = (char*) malloc(sizeof(char) * (RSA_HEX_DIGEST_LENGTH + 1));
 
-        bp = OpenSSL::BIO_new_mem_buf(publicKey, -1); //strlen(publicKey)
-        OpenSSL::PEM_read_bio_RSAPublicKey(bp, &rsa, 0, 0);
+        bp = openSSL::BIO_new_mem_buf(publicKey, -1); //strlen(publicKey)
+        openSSL::PEM_read_bio_RSAPublicKey(bp, &rsa, 0, 0);
 
         buffer = (char*) malloc(sizeof(char*) * RSA_DIGEST_LENGTH);
 
-        int val = OpenSSL::RSA_public_encrypt(
+        // TODO int val = Error handle the sscanf results
+        openSSL::RSA_public_encrypt(
             strlen(plaintextBlock) + 1,  //TODO maybe + 1
             (unsigned char*) plaintextBlock,
             (unsigned char*) buffer,
@@ -139,16 +140,88 @@ namespace howl {
         //std::cout << "Encrypted Block:" << std::endl;
         //std::cout << "<" << encryptedBlock << ">" << std::endl << std::endl;
 
-        OpenSSL::RSA_free(rsa);
-        OpenSSL::BIO_free(bp);
+        openSSL::RSA_free(rsa);
+        openSSL::BIO_free(bp);
         //free(plaintextBlock);
         //free(buffer);
 
         return buffer;
     }
 
+    void BlockChain::loadSSL(){
+
+        openSSL::OpenSSL_add_all_algorithms();
+        openSSL::ERR_load_BIO_strings();
+        openSSL::ERR_load_crypto_strings();
+    }
+
+    void BlockChain::handleErrors(){
+
+        //openSSL::ERR_print_errors_fp(stderr);
+        //abort();
+    }
+
+    void BlockChain::BIOtoChar(
+        openSSL::BIO*   bp,
+        char**          key){
+    
+        int length;
+
+        length = BIO_pending(bp);
+        *key = (char*) malloc(sizeof(char) * (length + 1));
+
+        if(!(openSSL::BIO_read(bp, (unsigned char*) *key, length)))
+            handleErrors();
+    }
+
+    void BlockChain::generateKeyPair(
+        char**  publicKey, 
+        char**  privateKey){
+        
+        openSSL::BIGNUM* e; 
+        openSSL::RSA*    rsa;
+        openSSL::BIO*    bp_public;
+        openSSL::BIO*    bp_private;
+
+        if(!(e = openSSL::BN_new()))
+            handleErrors();
+
+        if(!(openSSL::BN_set_word(e, SSE)))
+            handleErrors();
+
+        if(!(rsa = openSSL::RSA_new()))
+            handleErrors();
+
+        if(!(openSSL::RSA_generate_multi_prime_key(rsa, RSA_BITS, RSA_PRIMES, e, NULL)))
+            handleErrors();
+
+        bp_public = openSSL::BIO_new(openSSL::BIO_s_mem());
+        if(!(openSSL::PEM_write_bio_RSAPublicKey(bp_public, rsa)))
+           handleErrors();
+
+        bp_private = openSSL::BIO_new(openSSL::BIO_s_mem());
+        if(!(openSSL::PEM_write_bio_RSAPrivateKey(bp_private, rsa, NULL, NULL, 0, NULL, NULL)))
+            handleErrors();
+
+        BIOtoChar(bp_public, publicKey);
+        BIOtoChar(bp_private, privateKey);
+
+        openSSL::BN_free(e);
+        openSSL::RSA_free(rsa);
+        openSSL::BIO_free(bp_private);
+        openSSL::BIO_free(bp_public);
+    }
+
+    void BlockChain::generateChatId(
+        char**  chatID, 
+        char*   localAddress, 
+        char*   foreignAddress){
+
+    }
+
     Block BlockChain::_getLastblock() const {
 
         return *_sentHead;
     }
+
 }

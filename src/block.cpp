@@ -33,7 +33,8 @@ namespace howl {
         _previousHash = (char*) malloc(sizeof(char) * 1000);
         _message = (char*) malloc(sizeof(char) * 1000);
 
-        int val = sscanf(
+        // TODO int val = Error handle the sscanf results
+        sscanf(
             plaintextBlock,
             "{\n\t\"version\":%d\n\t\"nonce\":%d\n\t\"previousHash\":\"%[^\"]\"\n\t\"message\":\"%[^\"]\"\n\t\"time\":%ld\n}",
             &_version,
@@ -83,7 +84,7 @@ namespace howl {
 
         return buffer;
     }
-
+m
     char* Block::toJSON(){
 
         char* buffer;
@@ -126,7 +127,7 @@ namespace howl {
 
     int Block::_calculateHash(){
 
-        OpenSSL::SHA512_CTX* ctx;
+        openSSL::SHA512_CTX* ctx;
         char*   salt;
         char*   buffer;
         char*   p; 
@@ -141,7 +142,7 @@ namespace howl {
         saltLength = 50 + messageLength +
             previousHashLength + merklerootHashLength + 1;
 
-        ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+        ctx = (openSSL::SHA512_CTX *) malloc(sizeof(openSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * saltLength);
         buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
         _currentHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
@@ -156,9 +157,9 @@ namespace howl {
             _previousHash,
             _merklerootHash);
 
-        OpenSSL::SHA512_Init(ctx);
-        OpenSSL::SHA512_Update(ctx, salt, saltLength);
-        OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        openSSL::SHA512_Init(ctx);
+        openSSL::SHA512_Update(ctx, salt, saltLength);
+        openSSL::SHA512_Final((unsigned char*) buffer, ctx);
         p =  _currentHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
 
@@ -178,14 +179,14 @@ namespace howl {
 
     int Block::_calculateMerklerootHash(){
         
-        OpenSSL::SHA512_CTX* ctx;
+        openSSL::SHA512_CTX* ctx;
         Block*  iterator;
         char*   salt;
         char*   buffer;
         char*   p;
         int     i;
 
-        ctx = (OpenSSL::SHA512_CTX *) malloc(sizeof(OpenSSL::SHA512_CTX));
+        ctx = (openSSL::SHA512_CTX *) malloc(sizeof(openSSL::SHA512_CTX));
         salt = (char*) malloc(sizeof(char) * (MERKLEROOT_SALT + 1));
         buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
         _merklerootHash = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
@@ -216,9 +217,9 @@ namespace howl {
         //std::cout << "SALT::" << std::endl;
         //std::cout << strlen(salt) << " " << i << " :: " << salt << std::endl;
 
-        OpenSSL::SHA512_Init(ctx);
-        OpenSSL::SHA512_Update(ctx, salt, i);
-        OpenSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        openSSL::SHA512_Init(ctx);
+        openSSL::SHA512_Update(ctx, salt, i);
+        openSSL::SHA512_Final((unsigned char*) buffer, ctx);
 
         p =  _merklerootHash;
         for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){

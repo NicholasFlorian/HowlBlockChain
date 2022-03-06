@@ -3,7 +3,9 @@
 #include <iostream>
 #include <math.h>
 
-namespace OpenSSL {
+namespace openSSL {
+    #include <openssl/bio.h>
+    #include <openssl/ossl_typ.h>
     #include <openssl/conf.h>
     #include <openssl/bn.h>
     #include <openssl/engine.h>

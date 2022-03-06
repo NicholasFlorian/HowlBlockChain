@@ -23,6 +23,19 @@ namespace howl {
         void        addPrevReceivedBlock(char* encryptedBlock);
         char*       toString();
         char*       getEncryptedBlock(char* publicKey);
+        
+        static void loadSSL();
+        static void handleErrors();
+        static void BIOtoChar( 
+            openSSL::BIO*   bp,
+            char**          key);
+        static void generateKeyPair(
+            char**  publicKey, 
+            char**  privateKey);
+        static void generateChatId(
+            char**  chatID, 
+            char*   localAddress, 
+            char*   foreignAddress);
 
     private:
 
