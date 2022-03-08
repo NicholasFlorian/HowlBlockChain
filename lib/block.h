@@ -1,6 +1,7 @@
-#include <sstream>
+
+#include <stdio.h>
 #include <cstring>
-#include <iostream>
+#include <ctime>
 #include <math.h>
 
 namespace openSSL {

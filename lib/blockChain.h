@@ -1,5 +1,3 @@
-#include <sstream>
-#include <iostream>
 
 #include "block.h"
 
@@ -19,8 +17,8 @@ namespace howl {
         
         void        addSentBlock(char* message);
         void        addReceivedBlock(char* encryptedBlock, char* privateKey);
-        void        addPrevSentBlock(char* encryptedBlock);
-        void        addPrevReceivedBlock(char* encryptedBlock);
+        void        addPrevSentBlock(char* encryptedBlock, char* publicKey);
+        void        addPrevReceivedBlock(char* encryptedBlock, char* privateKey);
         char*       toString();
         char*       getEncryptedBlock(char* publicKey);
         Block*      getLastSentBlock();
@@ -38,6 +36,7 @@ namespace howl {
             char**  chatID, 
             char*   localAddress, 
             char*   foreignAddress);
+        static void generateUserId(char** userId, char* localAddress);
 
     private:
 

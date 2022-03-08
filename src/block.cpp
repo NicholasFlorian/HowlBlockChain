@@ -40,14 +40,6 @@ namespace howl {
 
     Block::Block(char* plaintextBlock, Block* previousBlock){
 
-        //uint32_t    version;
-        //uint32_t    nonce;
-        //char*       previousHash;
-        //char*       merklerootHash;
-        //char*       message;
-        //time_t      timeSent;
-        //time_t      timeRecieved;
-
         char* buffer;
 
         buffer = (char*) malloc(sizeof(char) * 1000);
@@ -107,7 +99,7 @@ namespace howl {
 
         return buffer;
     }
-m
+
     char* Block::toJSON(){
 
         char* buffer;
@@ -163,7 +155,7 @@ m
         messageLength = strlen(_message);
         previousHashLength = strlen(_previousHash);
         merklerootHashLength = strlen(_merklerootHash);
-        saltLength = 50 + messageLength +
+        saltLength = 100 + messageLength + // should be like 50? TODO fix padding later
             previousHashLength + merklerootHashLength + 1;
 
         ctx = (openSSL::SHA512_CTX *) malloc(sizeof(openSSL::SHA512_CTX));
@@ -238,9 +230,6 @@ m
         } 
         salt[i] = '\0';
 
-        //std::cout << "SALT::" << std::endl;
-        //std::cout << strlen(salt) << " " << i << " :: " << salt << std::endl;
-
         openSSL::SHA512_Init(ctx);
         openSSL::SHA512_Update(ctx, salt, i);
         openSSL::SHA512_Final((unsigned char*) buffer, ctx);
@@ -258,9 +247,6 @@ m
         free(buffer);
         free(salt);
         free(ctx);
-
-        //std::cout << "HASH::" << std::endl;
-        //std::cout << strlen(hash) << " :: " << (unsigned char*)hash << std::endl;m
 
         return 1;
     }

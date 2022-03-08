@@ -77,19 +77,20 @@ namespace howl {
             newBlock = new Block(plaintextBlock, NULL);
             
             if(newBlock->getVersion() != 0)
-                std::cout << "\tVersion Failed" << std::endl;
+                handleErrors();
 
             _receivedHead = newBlock;
+            _receivedLength++;
         }
         else{
 
             newBlock = new Block(plaintextBlock, _receivedHead);
 
             if(newBlock->getVersion() != _receivedLength + 1)
-                std::cout << "\tVersion Failed" << std::endl;
+                handleErrors();
                 
             if(strcmp(newBlock->getPreviousHash(), _receivedHead->getHash()) != 0)
-                std::cout << "\tPrevious Hash Failed" << std::endl;
+                handleErrors();
 
             _receivedHead = newBlock;
             _receivedLength++;
@@ -140,11 +141,58 @@ namespace howl {
         }
         encryptedBlock[RSA_HEX_DIGEST_LENGTH] = '\0';
 
-        OpenSSL::RSA_free(rsa);
-        OpenSSL::BIO_free(bp);
+        openSSL::RSA_free(rsa);
+        openSSL::BIO_free(bp);
         //free(plaintextBlock);
 
         return buffer;
+    }
+
+    void BlockChain::addPrevSentBlock(char* encryptedBlock, char* privateKey) {
+
+        openSSL::RSA*   rsa = NULL;
+        openSSL::BIO*   bp;
+        Block*          newBlock;
+        char*           plaintextBlock = NULL;
+
+        bp = openSSL::BIO_new_mem_buf(privateKey, -1);
+        openSSL::PEM_read_bio_RSAPrivateKey(bp, &rsa, 0, 0);
+
+        plaintextBlock = (char*) malloc(sizeof(char*) * (RSA_DIGEST_LENGTH + 1));
+        
+        openSSL::RSA_private_decrypt(
+            RSA_DIGEST_LENGTH ,
+            (unsigned char*) encryptedBlock,
+            (unsigned char*) plaintextBlock,
+            rsa,
+            RSA_PKCS1_OAEP_PADDING);
+
+        if(_sentHead == NULL){
+        
+            newBlock = new Block(plaintextBlock, NULL);
+        
+            if(newBlock->getVersion() != 0)
+                handleErrors();
+
+            _sentHead = newBlock;
+            _sentLength++;
+        }
+        else{
+
+            newBlock = new Block(plaintextBlock, _receivedHead);
+
+            if(newBlock->getVersion() != _receivedLength + 1)
+                handleErrors();
+                
+            if(strcmp(newBlock->getPreviousHash(), _sentHead->getHash()) != 0)
+                handleErrors();
+
+            _sentHead = newBlock;
+            _sentLength++;
+        }
+
+        openSSL::RSA_free(rsa);
+        openSSL::BIO_free(bp);
     }
 
     void BlockChain::loadSSL(){
@@ -158,6 +206,16 @@ namespace howl {
 
         //openSSL::ERR_print_errors_fp(stderr);
         //abort();
+    }
+
+    Block* BlockChain::getLastSentBlock() {
+
+        return _sentHead;
+    }
+
+    Block* BlockChain::getLastReceivedBlock() {
+
+        return _receivedHead;
     }
 
     void BlockChain::BIOtoChar(
@@ -212,20 +270,81 @@ namespace howl {
     }
 
     void BlockChain::generateChatId(
-        char**  chatID, 
+        char**  chatId, 
         char*   localAddress, 
         char*   foreignAddress){
 
+        openSSL::SHA512_CTX* ctx;
+        char*   salt;
+        char*   buffer;
+        char*   p;
+        int     saltLength;
+        int     localAddressLength;
+        int     foreignAddressLength;
+
+        localAddressLength = strlen(localAddress);
+        foreignAddressLength = strlen(foreignAddress);
+        saltLength = 1023 + localAddressLength + foreignAddressLength;
+
+        ctx = (openSSL::SHA512_CTX *) malloc(sizeof(openSSL::SHA512_CTX));
+        salt = (char*) malloc(sizeof(char) * saltLength);
+        buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+        *chatId = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
+
+        saltLength = sprintf(
+            salt,
+            "{%s_%s}",
+            localAddress,
+            foreignAddress);
+
+        openSSL::SHA512_Init(ctx);
+        openSSL::SHA512_Update(ctx, salt, saltLength);
+        openSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        p =  *chatId;
+        for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
+
+            sprintf(p, "%02x", (unsigned char) buffer[i]);
+
+            if(i != SHA512_DIGEST_LENGTH - 2)
+                p += 2;
+        }
+        *chatId[SHA512_HEX_DIGEST_LENGTH] = '\0';
+
+        free(buffer);
+        free(salt);
+        free(ctx);
     }
 
-    Block* BlockChain::getLastSentBlock() {
+    void BlockChain::generateUserId(char** userId, char* localAddress){
 
-        return _sentHead;
-    }
+        openSSL::SHA512_CTX* ctx;
+        char*   salt;
+        char*   buffer;
+        char*   p;
+        int     localAddressLength;
 
-    Block* BlockChain::getLastReceivedBlock() {
+        localAddressLength = strlen(localAddress);
 
-        return _receivedHead;
+        ctx = (openSSL::SHA512_CTX *) malloc(sizeof(openSSL::SHA512_CTX));
+        buffer = (char*) malloc(sizeof(char) * SHA512_DIGEST_LENGTH);
+        *userId = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
+
+        openSSL::SHA512_Init(ctx);
+        openSSL::SHA512_Update(ctx, localAddress, localAddressLength);
+        openSSL::SHA512_Final((unsigned char*) buffer, ctx);
+        p =  *userId;
+        for(int i = 0; i < SHA512_DIGEST_LENGTH; i++){
+
+            sprintf(p, "%02x", (unsigned char) buffer[i]);
+
+            if(i != SHA512_DIGEST_LENGTH - 2)
+                p += 2;
+        }
+        *userId[SHA512_HEX_DIGEST_LENGTH] = '\0';
+
+        free(buffer);
+        free(salt);
+        free(ctx);
     }
 
 }

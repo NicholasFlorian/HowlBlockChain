@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     howl::BlockChain* userA = NULL;
     howl::BlockChain* userB = NULL;  
     
-    OpenSSL_add_all_algorithms();
+    openSSL_add_all_algorithms();
     ERR_load_BIO_strings();
     ERR_load_crypto_strings();
 
