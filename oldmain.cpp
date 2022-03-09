@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 
 
     ////////////////////////////////////////////////////////////////////////////
-    userA->addSentBlock((char *) "message 1");
+    userA->buildSentBlock((char *) "message 1");
 
     std::cout << std::endl << "DISPLAY FIRST MESSAGE:" << std::endl;
     std::cout << userA->toString() << std::endl;
