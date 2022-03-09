@@ -1,8 +1,14 @@
 
 #include <stdio.h>
-#include <cstring>
-#include <ctime>
 #include <math.h>
+#include <cstring>
+
+// Windows includes
+#include <sstream>
+
+// POSIX includes 
+// #include <ctime>
+
 
 namespace openSSL {
     #include <openssl/bio.h>

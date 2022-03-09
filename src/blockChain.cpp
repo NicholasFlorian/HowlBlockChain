@@ -1,3 +1,4 @@
+
 #include "blockChain.h"
 
 namespace howl {
@@ -318,7 +319,6 @@ namespace howl {
     void BlockChain::generateUserId(char** userId, char* localAddress){
 
         openSSL::SHA512_CTX* ctx;
-        char*   salt;
         char*   buffer;
         char*   p;
         int     localAddressLength;
@@ -343,7 +343,6 @@ namespace howl {
         *userId[SHA512_HEX_DIGEST_LENGTH] = '\0';
 
         free(buffer);
-        free(salt);
         free(ctx);
     }
 

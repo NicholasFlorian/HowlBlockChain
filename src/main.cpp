@@ -1,5 +1,5 @@
+
 #include <iostream>
-#include <string.h>
 
 #include "blockChain.h"
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     std::cout << userA->getLastSentBlock()->toString() << std::endl;
 
     std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
-    char* temp2 = userA->getEncryptedBlock(userBPublic);,
+    char* temp2 = userA->getEncryptedBlock(userBPublic);
     userB->addReceivedBlock(temp2, userBPrivate);
     std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
     
