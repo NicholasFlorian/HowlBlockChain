@@ -34,7 +34,8 @@ int main(int argc, char *argv[]) {
 
     //
     std::cout << std::endl << "DISPLAY GENISIS BLOCK:" << std::endl;
-    std::cout << userA->getLastSentBlock()->toString() << std::endl;
+    userA->buildGenisisBlock();
+    std::cout << userA->getLastSentBlock()->toJSON() << std::endl;
     
     std::cout << std::endl << "SEND GENISIS TO OTHER:" << std::endl;
     char* temp1 = userA->getEncryptedBlock(userBPublic);

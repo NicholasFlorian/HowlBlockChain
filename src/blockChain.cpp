@@ -1,11 +1,22 @@
 
-#include <iostream>
 #include "blockChain.h"
 
 namespace howl {
 
     BlockChain::BlockChain(char* chatId) {
-        
+
+        _chatId = (char*) malloc(sizeof(char*) * (SHA512_HEX_DIGEST_LENGTH + 1));
+        sprintf(_chatId, "%s", chatId);
+        _sentLength = 0;
+        _receivedLength = 0;
+        _work = 3;
+
+        _sentHead = NULL;
+        _receivedHead = NULL;
+    }
+
+    void BlockChain::buildGenisisBlock() {
+
         Block*  genBlock;
         char*   initialPreviousHash;
         char*   initialCurrentHash;
@@ -16,29 +27,22 @@ namespace howl {
         initialCurrentHash = (char*) malloc(sizeof(char) * 5);
         initialMerklerootHash = (char*) malloc(sizeof(char) * 5);
         initialMessage = (char*) malloc(sizeof(char) * 12);
-        _chatId = (char*) malloc(sizeof(char*) * (SHA512_HEX_DIGEST_LENGTH + 1));
-
-        _sentLength = 0;
-        _receivedLength = 0;
-        _work = 3;
 
         sprintf(initialPreviousHash, "NULL");
         sprintf(initialCurrentHash, "NULL");
         sprintf(initialMerklerootHash, "NULL");
         sprintf(initialMessage, "GENSISBLOCK");
-        sprintf(_chatId, "%s", chatId);
 
         genBlock = new Block(
-            _sentLength++, 
-            NULL, 
-            initialPreviousHash, 
-            initialCurrentHash,
-            initialMerklerootHash,
-            initialMessage);
+                _sentLength++,
+                nullptr,
+                initialPreviousHash,
+                initialCurrentHash,
+                initialMerklerootHash,
+                initialMessage);
 
-        (*genBlock).mine(_work);
+        //(*genBlock).mine(_work);
         _sentHead = genBlock;
-        _receivedHead = NULL;
     }
 
     void BlockChain::buildSentBlock(char* message) {
@@ -46,10 +50,10 @@ namespace howl {
         Block* newBlock;
 
         newBlock = new Block(
-            _sentLength++, 
-            _sentHead, 
-            (*_sentHead).getHash(),
-            message);
+                _sentLength++,
+                _sentHead,
+                (*_sentHead).getHash(),
+                message);
 
         (*newBlock).mine(_work);
         _sentHead = newBlock;
@@ -72,18 +76,16 @@ namespace howl {
         rebit(buffer, encryptedBlock);
 
         openSSL::RSA_private_decrypt(
-            RSA_DIGEST_LENGTH,
-            (unsigned char*) buffer,
-            (unsigned char*) plaintextBlock,
-            rsa,
-            RSA_PKCS1_OAEP_PADDING);
-
-        std::cout << plaintextBlock << std::endl;
+                RSA_DIGEST_LENGTH,
+                (unsigned char*) buffer,
+                (unsigned char*) plaintextBlock,
+                rsa,
+                RSA_PKCS1_OAEP_PADDING);
 
         if(_receivedHead == NULL){
-        
+
             newBlock = new Block(plaintextBlock, NULL);
-            
+
             if(newBlock->getVersion() != 0)
                 handleErrors();
 
@@ -96,7 +98,7 @@ namespace howl {
 
             if(newBlock->getVersion() != _receivedLength + 1)
                 handleErrors();
-                
+
             if(strcmp(newBlock->getPreviousHash(), _receivedHead->getHash()) != 0)
                 handleErrors();
 
@@ -125,18 +127,18 @@ namespace howl {
 
         buffer = (char*) malloc(sizeof(char) * (RSA_DIGEST_LENGTH + 1));
         plaintextBlock = (char*) malloc(sizeof(char*) * (RSA_HEX_DIGEST_LENGTH + 1));
-        
+
         openSSL::RSA_private_decrypt(
-            RSA_DIGEST_LENGTH,
-            (unsigned char*) encryptedBlock,
-            (unsigned char*) plaintextBlock,
-            rsa,
-            RSA_PKCS1_OAEP_PADDING);
+                RSA_DIGEST_LENGTH,
+                (unsigned char*) encryptedBlock,
+                (unsigned char*) plaintextBlock,
+                rsa,
+                RSA_PKCS1_OAEP_PADDING);
 
         if(_sentHead == NULL){
-        
+
             newBlock = new Block(plaintextBlock, NULL);
-        
+
             if(newBlock->getVersion() != 0)
                 handleErrors();
 
@@ -149,7 +151,7 @@ namespace howl {
 
             if(newBlock->getVersion() != _receivedLength + 1)
                 handleErrors();
-                
+
             if(strcmp(newBlock->getPreviousHash(), _sentHead->getHash()) != 0)
                 handleErrors();
 
@@ -186,11 +188,11 @@ namespace howl {
 
         // TODO int val = Error handle the sscanf results
         openSSL::RSA_public_encrypt(
-            strlen(plaintextBlock) + 1,  //TODO maybe + 1
-            (unsigned char*) plaintextBlock,
-            (unsigned char*) buffer,
-            rsa,
-            RSA_PKCS1_OAEP_PADDING);
+                strlen(plaintextBlock) + 1,  //TODO maybe + 1
+                (unsigned char*) plaintextBlock,
+                (unsigned char*) buffer,
+                rsa,
+                RSA_PKCS1_OAEP_PADDING);
 
         p = encryptedBlock;
         for(int i = 0; i < RSA_DIGEST_LENGTH; i++){
@@ -200,7 +202,7 @@ namespace howl {
         }
         encryptedBlock[RSA_HEX_DIGEST_LENGTH] = '\0';
 
-        
+
 
         openSSL::RSA_free(rsa);
         openSSL::BIO_free(bp);
@@ -227,7 +229,7 @@ namespace howl {
 
             bool isOdd;
             unsigned char byte;
-            
+
             isOdd = j % 2;
 
             switch(encryptedBlock[j]){
@@ -284,12 +286,12 @@ namespace howl {
             if(isOdd){
 
                 buffer[i] = buffer[i] | byte;
-                i++;          
+                i++;
             }
             else {
 
                 byte = ((byte & 0x0F) << 4);
-                buffer[i] = byte;  
+                buffer[i] = byte;
             }
         }
     }
@@ -308,9 +310,9 @@ namespace howl {
     }
 
     void BlockChain::BIOtoChar(
-        openSSL::BIO*   bp,
-        char**          key) {
-    
+            openSSL::BIO*   bp,
+            char**          key) {
+
         int length;
 
         length = BIO_pending(bp);
@@ -321,10 +323,10 @@ namespace howl {
     }
 
     void BlockChain::generateKeyPair(
-        char**  publicKey, 
-        char**  privateKey) {
-        
-        openSSL::BIGNUM* e; 
+            char**  publicKey,
+            char**  privateKey) {
+
+        openSSL::BIGNUM* e;
         openSSL::RSA*    rsa;
         openSSL::BIO*    bp_public;
         openSSL::BIO*    bp_private;
@@ -343,7 +345,7 @@ namespace howl {
 
         bp_public = openSSL::BIO_new(openSSL::BIO_s_mem());
         if(!(openSSL::PEM_write_bio_RSAPublicKey(bp_public, rsa)))
-           handleErrors();
+            handleErrors();
 
         bp_private = openSSL::BIO_new(openSSL::BIO_s_mem());
         if(!(openSSL::PEM_write_bio_RSAPrivateKey(bp_private, rsa, NULL, NULL, 0, NULL, NULL)))
@@ -359,9 +361,9 @@ namespace howl {
     }
 
     void BlockChain::generateChatId(
-        char**  chatId, 
-        char*   localAddress, 
-        char*   foreignAddress) {
+            char**  chatId,
+            char*   localAddress,
+            char*   foreignAddress) {
 
         openSSL::SHA512_CTX* ctx;
         char*   salt;
@@ -381,10 +383,10 @@ namespace howl {
         (*chatId) = (char*) malloc(sizeof(char) * (SHA512_HEX_DIGEST_LENGTH + 2));
 
         saltLength = sprintf(
-            salt,
-            "{%s_%s}",
-            localAddress,
-            foreignAddress);
+                salt,
+                "{%s_%s}",
+                localAddress,
+                foreignAddress);
 
         openSSL::SHA512_Init(ctx);
         openSSL::SHA512_Update(ctx, salt, saltLength);
