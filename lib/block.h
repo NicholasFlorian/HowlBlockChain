@@ -1,14 +1,7 @@
 
-#include <stdio.h>
-#include <math.h>
 #include <cstring>
-
-// Windows includes
-#include <sstream>
-
-// POSIX includes 
-// #include <ctime>
-
+#include <chrono>
+#include <math.h>
 
 namespace openSSL {
     #include <openssl/bio.h>
@@ -25,27 +18,27 @@ namespace openSSL {
 #define SHA512_DIGEST_LENGTH        64
 #define SHA512_HEX_DIGEST_LENGTH    126
 #define MAX_MESSAGE                 256
-#define MERKLEROOT_SALT             65536              
+#define MERKLEROOT_SALT             65536
 
 namespace howl{
 
     class Block {
-        
+
     public:
 
         Block(
-            uint32_t    nIndexIn, 
-            Block*      previousblock, 
-            char*       previousHash, 
-            char*       message);
+                uint32_t    nIndexIn,
+                Block*      previousblock,
+                char*       previousHash,
+                char*       message);
 
         Block(
-            uint32_t index, 
-            Block* previousBlock, 
-            char* previousHash, 
-            char* currentHash,
-            char* merklerootHash,
-            char* message);
+                uint32_t index,
+                Block* previousBlock,
+                char* previousHash,
+                char* currentHash,
+                char* merklerootHash,
+                char* message);
 
         Block(char* plaintextBlock, Block* previousBlock);
 

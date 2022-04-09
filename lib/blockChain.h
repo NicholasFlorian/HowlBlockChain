@@ -14,29 +14,29 @@ namespace howl {
     public:
 
         BlockChain(char* chatId);
-        
+
         void        buildGenisisBlock();
         void        buildSentBlock(char* message);
         void        addReceivedBlock(char* encryptedBlock, char* privateKey);
-        void        addPrevSentBlock(char* encryptedBlock, char* publicKey);
+        void        addPrevSentBlock(char* plaintextBlock);
         char*       toString();
         char*       getEncryptedBlock(char* publicKey);
         Block*      getLastSentBlock();
         Block*      getLastReceivedBlock();
-        
+
         static void rebit(unsigned char* buffer, char* encryptedBlock);
         static void loadSSL();
         static void handleErrors();
-        static void BIOtoChar( 
-            openSSL::BIO*   bp,
-            char**          key);
+        static void BIOtoChar(
+                openSSL::BIO*   bp,
+                char**          key);
         static void generateKeyPair(
-            char**  publicKey, 
-            char**  privateKey);
+                char**  publicKey,
+                char**  privateKey);
         static void generateChatId(
-            char**  chatID, 
-            char*   localAddress, 
-            char*   foreignAddress);
+                char**  chatID,
+                char*   localAddress,
+                char*   foreignAddress);
         static void generateUserId(char** userId, char* localAddress);
 
     private:
