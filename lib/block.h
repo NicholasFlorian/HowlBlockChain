@@ -1,4 +1,5 @@
 
+#include <sstream>
 #include <cstring>
 #include <chrono>
 #include <math.h>
@@ -48,6 +49,7 @@ namespace howl{
         char*       toString();
         char*       toJSON();
         void        mine(uint32_t  work);
+        static void freeBlock(Block* block); 
 
     protected:
 

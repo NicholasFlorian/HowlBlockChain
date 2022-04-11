@@ -38,7 +38,7 @@ namespace howl {
                 char*   localAddress,
                 char*   foreignAddress);
         static void generateUserId(char** userId, char* localAddress);
-
+        static void freeBlockChain(BlockChain* blockChain); 
     private:
 
         char*       _chatId;

@@ -54,6 +54,17 @@ int main(int argc, char *argv[]) {
     std::cout << temp2 << std::endl;
     userB->addReceivedBlock(temp2, userBPrivate);
     std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
-    
+
+
+    howl::BlockChain::freeBlockChain(userA);
+    howl::BlockChain::freeBlockChain(userB);
+    free(userAId);
+    free(userAPublic);
+    free(userAPrivate);
+    free(userBId);
+    free(userBPublic);
+    free(userBPrivate);
+    free(chatId);
+
     return 1;
 }
