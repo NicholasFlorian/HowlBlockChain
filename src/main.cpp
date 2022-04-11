@@ -35,25 +35,36 @@ int main(int argc, char *argv[]) {
     //
     std::cout << std::endl << "DISPLAY GENISIS BLOCK:" << std::endl;
     userA->buildGenisisBlock();
-    std::cout << userA->getLastSentBlock()->toJSON() << std::endl;
-    
-    std::cout << std::endl << "SEND GENISIS TO OTHER:" << std::endl;
-    char* temp1 = userA->getEncryptedBlock(userBPublic);
+
+    char* temp1 = userA->getLastSentBlock()->toJSON();
     std::cout << temp1 << std::endl;
+
+    std::cout << std::endl << "SEND GENISIS TO OTHER:" << std::endl;
+
+    char* temp2 = userA->getEncryptedBlock(userBPublic);
+    std::cout << temp2 << std::endl;
+
     userB->addReceivedBlock(temp1, userBPrivate);
-    std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
+
+    char* temp3 = userB->getLastReceivedBlock()->toString();
+    std::cout << temp3 << std::endl;
 
     //
     userA->buildSentBlock((char *) "message 1");
 
     std::cout << std::endl << "DISPLAY FIRST MESSAGE:" << std::endl;
-    std::cout << userA->getLastSentBlock()->toString() << std::endl;
+
+    char* temp4 = userA->getLastSentBlock()->toString();
+    std::cout << temp4 << std::endl;
 
     std::cout << std::endl << "SEND MESSAGE TO OTHER:" << std::endl;
-    char* temp2 = userA->getEncryptedBlock(userBPublic);
-    std::cout << temp2 << std::endl;
+
+    char* temp5 = userA->getEncryptedBlock(userBPublic);
+    std::cout << temp5 << std::endl;
+
     userB->addReceivedBlock(temp2, userBPrivate);
-    std::cout << userB->getLastReceivedBlock()->toString() << std::endl;
+    char* temp6 = userB->getLastReceivedBlock()->toString();
+    std::cout << temp6 << std::endl;
 
 
     howl::BlockChain::freeBlockChain(userA);
@@ -65,6 +76,12 @@ int main(int argc, char *argv[]) {
     free(userBPublic);
     free(userBPrivate);
     free(chatId);
+    free(temp1);
+    free(temp2);
+    free(temp3);
+    free(temp4);
+    free(temp5);
+    free(temp6);
 
     return 1;
 }

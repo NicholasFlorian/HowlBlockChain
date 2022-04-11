@@ -129,6 +129,12 @@ namespace howl {
 
         bool proofOfWork;
 
+        if(this->_currentHash != NULL)
+            free(this->_currentHash);
+
+        if(this->_merklerootHash != NULL)
+            free(this->_merklerootHash);
+
         _calculateMerklerootHash();
         proofOfWork = false;
         while(!proofOfWork){
@@ -263,11 +269,8 @@ namespace howl {
 
         if(block == NULL)
             return;
-
-        if(block->_previousBlock != NULL){
-
-            freeBlock(block->_previousBlock);
-        }
+        
+        freeBlock(block->_previousBlock); 
 
         if(block->_previousHash != NULL)
             free(block->_previousHash);

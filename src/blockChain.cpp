@@ -44,6 +44,11 @@ namespace howl {
         // TODO, could be messing causing memory issues.
         (*genBlock).mine(_work);
         _sentHead = genBlock;
+
+        free(initialPreviousHash);
+        free(initialCurrentHash);
+        free(initialMerklerootHash);
+        free(initialMessage);
     }
 
     void BlockChain::buildSentBlock(char* message) {

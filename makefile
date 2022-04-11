@@ -4,7 +4,7 @@
 # compile variables
  
 CC = g++
-CFLAGS = -Wall -g -std=c++11 -Ilib
+CFLAGS = -Wall -ggdb3 -std=c++11 -Ilib
 BIN=bin/
 OBJ=obj/
 SOURCE=src/
